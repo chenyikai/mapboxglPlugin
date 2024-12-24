@@ -6,7 +6,7 @@ declare interface icon {
     url: string;
 }
 
-declare type formatOptions =  {
+declare interface formatOptions  {
     value: string | number;
     data: object
 }
@@ -16,7 +16,7 @@ declare interface InfoFormConfig {
 
     prop: string | number;
 
-    format(formatOptions): string;
+    format(formatOptions: formatOptions): string;
 }
 
 declare type customPopupOptions  = PopupOptions & {

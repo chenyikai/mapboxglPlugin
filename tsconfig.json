@@ -1,5 +1,7 @@
 {
   "compilerOptions": {
+    "baseUrl": "./",
+
     "target": "ES2020",
     "useDefineForClassFields": true,
     "module": "ESNext",
@@ -19,6 +21,11 @@
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true,
     "noUncheckedSideEffectImports": true,
+
+    "typeRoots": ["node_modules/@types", "./types"],
+    "declaration": true,
+    "declarationDir": "./types",
+    "declarationMap": true,
 
     "paths": {
       "/@/*": [

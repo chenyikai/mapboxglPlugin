@@ -57,8 +57,7 @@ class MapBox extends EventEmitter {
           this.getMap().loadImage(url, (err, image) => {
             if (err) return reject(err);
             if (!this.getMap().hasImage(name)) {
-              // @ts-ignore
-              this.getMap().addImage(name, image);
+              this.getMap().addImage(name, image as ImageBitmap | HTMLImageElement | ImageData);
             }
           });
         });
@@ -66,8 +65,7 @@ class MapBox extends EventEmitter {
         this.getMap().loadImage(icons.url, (err, image) => {
           if (err) return reject(err);
           if (!this.getMap().hasImage(icons.name)) {
-            // @ts-ignore
-            this.getMap().addImage(icons.name, image);
+            this.getMap().addImage(icons.name, image as ImageBitmap | HTMLImageElement | ImageData);
           }
         });
       }
