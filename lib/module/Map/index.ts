@@ -1,24 +1,45 @@
 import EventEmitter from "eventemitter3";
-import type { MapOptions } from "mapbox-gl";
 import { Map, Popup } from "mapbox-gl";
-import type { icon, customPopupOptions, InfoFormConfig } from "types/module/Map"
+import { icon, customPopupOptions, InfoFormConfig, CustomMapOptions, MapType } from "types/module/Map";
 import { isNull } from 'lib/utils/validate'
+import { landStyle } from "lib/module/Map/vars.ts";
 
 
 class MapBox extends EventEmitter {
   // 地图实例
   _map: Map
-  options: MapOptions
+  options: CustomMapOptions | undefined;
 
-  _cache: Set<Function> = new Set()
+  _cache: Set<Function> = new Set();
   _mapTimer: number | null = null;
 
-  constructor(options: MapOptions) {
+  _load: Function = this._onLoad.bind(this)
+
+  static LAND: MapType = MapType.LAND
+  static SATELLITE: MapType = MapType.SATELLITE
+
+  constructor(options: CustomMapOptions) {
     super();
 
-    this.options = options
-    this._map = new Map(options)
-    this._map.once('load', this._onLoad)
+    this._setOptions(options)
+    this._map = new Map(this.options!)
+    // @ts-ignore
+    this._map.once('load', this._load)
+  }
+
+  _setOptions(options: CustomMapOptions) {
+    if (isNull(options)) {
+      throw new Error("options must not be null")
+    }
+
+    const props: { [name: string]: unknown } = {
+      style: null
+    }
+
+    if (options.type === MapBox.LAND) {
+      props.style = landStyle
+    }
+    this.options = { ...options, ...props }
   }
 
   _onLoad(): void {
@@ -30,10 +51,10 @@ class MapBox extends EventEmitter {
   }
 
   home() {
-    if(this.options.center) {
+    if(this.options?.center) {
       this.getMap().setCenter(this.options.center);
     }
-    if(this.options.zoom != null) {
+    if(this.options?.zoom != null) {
       this.getMap().setZoom(this.options.zoom);
     }
   }

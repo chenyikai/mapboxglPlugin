@@ -1,73 +1,59 @@
-/**
- * 范围 [minX, minY, maxX, maxY]
- */
-export declare type BBox = [number, number, number, number]
-
-export declare type Id = string | number | undefined;
-
-/**
- * 初始基准点的位置
- */
-export declare enum Directions {
-  // TOP,
-  // RIGHT,
-  // BOTTOM,
-  // LEFT,
-  TOP_LEFT,
-  TOP_RIGHT,
-  BOTTOM_RIGHT,
-  BOTTOM_LEFT,
-  // CENTER,
-}
-
-/**
- * 范围值枚举
- */
-export declare enum Scopes {
-  MIN_X,
-  MIN_Y,
-  MAX_X,
-  MAX_Y,
-}
-
-/**
- * bbox-范围 dir-初始基准点的位置 options-配置
- */
-export declare interface ItemOptions {
-  position: Point,
-  width: number,
-  height: number,
-  dir?: Directions;
-  expand?: { x: number, y: number },
-  options?: { id?: Id, properties?: GeoJsonProperties };
-}
-
+import { Point } from 'mapbox-gl';
+import { Feature, Polygon, GeoJsonProperties } from "geojson";
+import { BBox, Id, Directions, Scopes, ItemOptions } from 'types/core/Collision/item';
 declare class Item {
-  bbox: BBox;
-  dir: Directions | undefined;
-  options: ItemOptions["options"] | undefined;
-  id: Id;
-  static TOP: Directions;
-  static RIGHT: Directions;
-  static BOTTOM: Directions;
-  static LEFT: Directions;
-  static TOP_LEFT: Directions;
-  static TOP_RIGHT: Directions;
-  static BOTTOM_RIGHT: Directions;
-  static BOTTOM_LEFT: Directions;
-  static CENTER: Directions;
-  static MIN_X: Scopes.MIN_X;
-  static MIN_Y: Scopes.MIN_Y;
-  static MAX_X: Scopes.MAX_X;
-  static MAX_Y: Scopes.MAX_Y;
-  constructor(config: ItemOptions);
-  _init({ bbox, dir, options }: ItemOptions): void;
-  getCorner(corner: Scopes): number;
-  getBbox(): BBox;
-  getWidth(): number;
-  getHeight(): number;
-  update(config: ItemOptions): void;
-  polygon(): Feature<Polygon, GeoJsonProperties>;
-  isIntersect(box: BBox): boolean;
+    visible: boolean;
+    _position: Point;
+    _expand: {
+        x: number;
+        y: number;
+    };
+    _width: number;
+    _height: number;
+    _bbox: BBox;
+    _dir: Directions | undefined;
+    _options: ItemOptions["options"] | undefined;
+    _id: Id;
+    static TOP_LEFT: Directions;
+    static TOP_RIGHT: Directions;
+    static BOTTOM_RIGHT: Directions;
+    static BOTTOM_LEFT: Directions;
+    static MIN_X: Scopes;
+    static MIN_Y: Scopes;
+    static MAX_X: Scopes;
+    static MAX_Y: Scopes;
+    /**
+     *
+     * @param config
+     */
+    constructor(config: ItemOptions);
+    _init({ position, width, height, dir, expand, options }: ItemOptions): void;
+    get minX(): number;
+    get minY(): number;
+    get maxX(): number;
+    get maxY(): number;
+    setBBox(): void;
+    getId(): Id;
+    /**
+     *
+     */
+    getBBox(): BBox;
+    /**
+     * 设置方向
+     * @param dirEnum 方向枚举
+     */
+    setDir(dirEnum: Directions): void;
+    /**
+     * 设置是否显示
+     * @param visible
+     */
+    setVisible(visible: boolean): void;
+    polygon(): Feature<Polygon, GeoJsonProperties>;
+    /**
+     * 判断item与box是否相交
+     * @param box
+     * @return true-相交 false-不相交
+     */
+    isIntersect(box: BBox): boolean;
 }
 export default Item;

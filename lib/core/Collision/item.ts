@@ -52,6 +52,10 @@ class Item {
   // 最大Y
   static MAX_Y: Scopes = Scopes.MAX_Y;
 
+  /**
+   *
+   * @param config
+   */
   constructor(config: ItemOptions) {
     this._init(config)
   }
@@ -84,15 +88,6 @@ class Item {
 
   get maxY(): number {
     return this._bbox[Item.MAX_Y]
-  }
-
-  /**
-   * 获取边角值
-   * @param corner
-   * @return Scopes
-   */
-  getCorner(corner: Scopes): Scopes {
-    return this._bbox[corner];
   }
 
   setBBox() {
@@ -142,19 +137,19 @@ class Item {
     return this._bbox;
   }
 
-  getWidth(): number {
-    return this.getCorner(Item.MAX_X) - this.getCorner(Item.MIN_X)
-  }
-
-  getHeight(): number {
-    return this.getCorner(Item.MAX_Y) - this.getCorner(Item.MIN_Y)
-  }
-
+  /**
+   * 设置方向
+   * @param dirEnum 方向枚举
+   */
   setDir(dirEnum: Directions): void {
     this._dir = dirEnum;
     this.setBBox()
   }
 
+  /**
+   * 设置是否显示
+   * @param visible
+   */
   setVisible(visible: boolean): void {
     this.visible = visible;
   }
@@ -164,8 +159,9 @@ class Item {
   }
 
   /**
-   * 判断是否和输入的box相交
+   * 判断item与box是否相交
    * @param box
+   * @return true-相交 false-不相交
    */
   isIntersect(box: BBox): boolean {
     const [ minX, minY, maxX, maxY ] = box

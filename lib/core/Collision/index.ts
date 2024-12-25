@@ -2,22 +2,8 @@ import RBush from 'rbush'
 import Item from 'lib/core/Collision/item.ts';
 import { set } from 'lodash-es'
 import { BBox, Directions, Id } from "types/core/Collision/item";
-import type { Map, LngLat } from 'mapbox-gl'
-import type { GeoJsonProperties } from "geojson";
-
-interface CollisionOptions {
-  map: Map
-  collisions: []
-}
-
-interface collisionItem {
-  lngLat: LngLat,
-  width: number,
-  height: number,
-  dir?: Directions,
-  expand?: { x: number, y: number },
-  options?: { id?: Id, properties?: GeoJsonProperties };
-}
+import type { Map } from 'mapbox-gl'
+import type { CollisionOptions, collisionItem } from "types/core/Collision"
 
 class Collision {
 
