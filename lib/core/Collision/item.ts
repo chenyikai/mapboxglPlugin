@@ -150,12 +150,12 @@ class Item {
     return this.getCorner(Item.MAX_Y) - this.getCorner(Item.MIN_Y)
   }
 
-  changeDir(dirEnum: Directions): void {
+  setDir(dirEnum: Directions): void {
     this._dir = dirEnum;
     this.setBBox()
   }
 
-  changeVisible(visible: boolean): void {
+  setVisible(visible: boolean): void {
     this.visible = visible;
   }
 
@@ -163,11 +163,13 @@ class Item {
     return bboxPolygon(this._bbox as GeoJSONBBox, this._options)
   }
 
-  intersects(other: BBox): boolean {
-    return !(other[Scopes.MIN_X] > this.getCorner(Item.MAX_X) ||
-        other[Scopes.MAX_X] < this.getCorner(Item.MIN_X) ||
-        other[Scopes.MIN_Y] > this.getCorner(Item.MAX_Y) ||
-        other[Scopes.MAX_Y] < this.getCorner(Item.MIN_Y))
+  /**
+   * 判断是否和输入的box相交
+   * @param box
+   */
+  isIntersect(box: BBox): boolean {
+    const [ minX, minY, maxX, maxY ] = box
+    return minX <= this.maxX || maxX >= this.minX || minY <= this.maxY || maxY >= this.minY
   }
 }
 

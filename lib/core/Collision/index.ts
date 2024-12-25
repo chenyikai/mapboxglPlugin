@@ -30,6 +30,10 @@ class Collision {
   constructor(config: CollisionOptions) {
     this._map = config.map;
     this._collisionList = config.collisions || [];
+    if (this._collisionList.length > 0) {
+      this._tree.load(this._collisionList);
+      this.collides()
+    }
   }
 
   add(collisionItem: collisionItem): Id | null {
@@ -46,20 +50,20 @@ class Collision {
       options: collisionItem.options
     });
 
-    this.setCollisions(item);
-    // TODO 会有重复情况
-    this._tree.insert(item);
+    this.set(item);
 
     return item.getId();
   }
 
-  setCollisions(item: Item): Id {
+  set(item: Item): Id {
     const index = this._collisionList.findIndex(collision => collision.getId() === item.getId())
     if (index !== -1) {
       set(this._collisionList, index, item);
+      this._tree.remove(item, (a, b) => a.getId() === b.getId());
     } else {
       this._collisionList.push(item);
     }
+    this._tree.insert(item);
 
     return item.getId();
   }
@@ -71,11 +75,10 @@ class Collision {
     const canvas_bbox: BBox = [0, 0, this._map._canvas.width / dpr, this._map._canvas.height / dpr]
     for(const item of this._collisionList) {
       for(const directionsKey in Directions) {
-        const direction = +Directions[directionsKey];
-        item.changeDir(direction)
-        if (!item || !item.intersects(canvas_bbox)) {
-          continue
-        }
+        const direction: number = +Directions[directionsKey];
+        item.setDir(direction)
+        const visible: boolean = item.isIntersect(canvas_bbox) && !this._tree.collides(item)
+        item.setVisible(visible)
       }
     }
   }

@@ -39,5 +39,6 @@
     "rbush": "^4.0.1",
     "uuid": "^11.0.3",
     "wellknown": "^0.5.0"
-  }
+  },
+  "peerDependencies": {}
 }

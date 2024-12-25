@@ -13,7 +13,7 @@
     "allowImportingTsExtensions": true,
     "isolatedModules": true,
     "moduleDetection": "force",
-    "noEmit": true,
+//    "noEmit": true,
 
     /* Linting */
     "strict": true,
@@ -22,10 +22,9 @@
     "noFallthroughCasesInSwitch": true,
     "noUncheckedSideEffectImports": true,
 
-    "typeRoots": ["node_modules/@types", "./types"],
     "declaration": true,
-    "declarationDir": "./types",
-    "declarationMap": true,
+    "outDir": "types",
+    "emitDeclarationOnly": true,
 
     "paths": {
       "/@/*": [
@@ -40,7 +39,6 @@
     },
   },
   "include": [
-    "src",
     "lib",
     "types/**/**/*.d.ts"
   ]

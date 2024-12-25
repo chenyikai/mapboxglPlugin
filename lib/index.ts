@@ -1,4 +1,5 @@
 import type { pluginOptions } from 'types/index'
+import MapBox from 'lib/module/Map/index'
 
 class Plugin {
   options: pluginOptions
@@ -9,3 +10,7 @@ class Plugin {
 }
 
 export default Plugin
+
+export {
+  MapBox
+}

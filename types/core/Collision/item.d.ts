@@ -68,6 +68,6 @@ declare class Item {
   getHeight(): number;
   update(config: ItemOptions): void;
   polygon(): Feature<Polygon, GeoJsonProperties>;
-  intersects(other: BBox): boolean;
+  isIntersect(box: BBox): boolean;
 }
 export default Item;
