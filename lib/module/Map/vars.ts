@@ -1,4 +1,5 @@
 import type { StyleSpecification } from 'mapbox-gl'
+import Layer from "lib/module/Layer";
 
 export const landStyle: StyleSpecification = {
   version: 8,
@@ -46,6 +47,14 @@ export const landStyle: StyleSpecification = {
     },
     {
       id: 'base-end',
+      type: 'background',
+      paint: {
+        // 'background-color': '#000',
+        'background-color': 'transparent',
+      },
+    },
+    {
+      id: Layer.DIVIDER,
       type: 'background',
       paint: {
         // 'background-color': '#000',

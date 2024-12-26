@@ -1,11 +1,18 @@
-import { Mapbox } from '../index'
+import { Mapbox, Layer } from '../index'
 
 const mapbox = new Mapbox({
   container: "map",
   type: Mapbox.LAND,
   center: [122.106863, 30.016028],
   zoom: 13,
-  accessToken: 'pk.eyJ1IjoiY2hlbnlpa2FpIiwiYSI6ImNrbTZiOTB1dzBtczMydnFzM2V5ZnR0YmcifQ.BPfABgNBi7FIcJBH3BeTwg'
 })
 
-console.log(mapbox, 'mapbox');
+mapbox.on('loaded', () => {
+  const layer = new Layer(mapbox.getMap(), {
+    icons: [{
+      name: 'ceshi',
+      url: 'https://upload.wikimedia.org/wikipedia/commons/8/89/Black_and_White_Boxed_%28bordered%29.png'
+    }]
+  })
+  console.log(layer,Layer.SOURCE, 'layer');
+})

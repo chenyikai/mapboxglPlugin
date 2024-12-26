@@ -5,11 +5,6 @@ export enum MapType {
     SATELLITE = 'satellite'
 }
 
-export interface icon {
-    name: string;
-    url: string;
-}
-
 export interface formatOptions  {
     value: string | number;
     data: object

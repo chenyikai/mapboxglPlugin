@@ -1,8 +1,11 @@
 import EventEmitter from "eventemitter3";
 import { Map, Popup } from "mapbox-gl";
-import { icon, customPopupOptions, InfoFormConfig, CustomMapOptions, MapType } from "types/module/Map";
+import { customPopupOptions, InfoFormConfig, CustomMapOptions, MapType } from "types/module/Map";
+import { icon } from 'types/core/Icon'
 import { isNull } from 'lib/utils/validate'
 import { landStyle } from "lib/module/Map/vars.ts";
+
+Map.prototype._authenticate = function() {};
 
 
 class MapBox extends EventEmitter {
@@ -32,9 +35,7 @@ class MapBox extends EventEmitter {
       throw new Error("options must not be null")
     }
 
-    const props: { [name: string]: unknown } = {
-      style: null
-    }
+    const props: { [name: string]: unknown } = {}
 
     if (options.type === MapBox.LAND) {
       props.style = landStyle
