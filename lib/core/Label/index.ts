@@ -1,13 +1,13 @@
 import { LabelOptions, labelData } from 'types/core/Label'
 import { Map } from 'mapbox-gl'
-import Item from 'lib/core/Label/Item.ts'
+import LabelItem from 'lib/core/Label/LabelItem.ts'
 
 class Label {
   _map: Map;
   _options: LabelOptions;
   _ctx: CanvasRenderingContext2D | any;
   labels: Array<labelData> = []
-  items: Array<Item> = []
+  items: Array<LabelItem> = []
 
   _repaint = this.repaint.bind(this)
 
@@ -44,7 +44,7 @@ class Label {
   }
 
   add(label: labelData) {
-    const labelItem = new Item({ ...this._options, ...label, ctx: this._ctx, dir: Item.BOTTOM_RIGHT })
+    const labelItem = new LabelItem({ ...this._options, ...label, ctx: this._ctx, dir: LabelItem.BOTTOM_RIGHT })
     labelItem.draw()
     this.labels.push(label)
     this.items.push(labelItem)

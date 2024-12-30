@@ -1,9 +1,9 @@
-import { Id, Directions, LabelItemOptions } from "types/core/Label/Item.ts";
+import { Id, Directions, LabelItemOptions } from "types/core/Label/LabelItem.ts";
 import { labelData } from 'types/core/Label'
 import { v4 as uuidV4 } from "uuid";
 import { BBox } from 'types/core/Collision/item.ts'
 
-class Item {
+class LabelItem {
 
   static BOTTOM_LEFT = Directions.BOTTOM_LEFT
   static TOP_LEFT = Directions.TOP_LEFT
@@ -44,9 +44,7 @@ class Item {
   }
 
   get bbox() {
-    if (this.dir === Item.BOTTOM_LEFT) {
-      return [0, 0, 0, this.point.y]
-    }
+    return this._bbox
   }
 
   get ID() {
@@ -62,20 +60,19 @@ class Item {
     this._line()
     const { width, height } = this._text();
     this._bbox = this._rect(width, height)
-    console.log(this._bbox, '_bbox');
   }
 
   _line() {
     this._ctx.beginPath();
 
     this._ctx.moveTo(this.point.x, this.point.y);
-    if (this.dir === Item.BOTTOM_LEFT) {
+    if (this.dir === LabelItem.BOTTOM_LEFT) {
       this._ctx.lineTo(this.point.x + this.ex, this.point.y - this.ey);
-    } else if (this.dir === Item.BOTTOM_RIGHT) {
+    } else if (this.dir === LabelItem.BOTTOM_RIGHT) {
       this._ctx.lineTo(this.point.x - this.ex, this.point.y - this.ey);
-    } else if (this.dir === Item.TOP_LEFT) {
+    } else if (this.dir === LabelItem.TOP_LEFT) {
       this._ctx.lineTo(this.point.x + this.ex, this.point.y + this.ey);
-    } else if (this.dir === Item.TOP_RIGHT) {
+    } else if (this.dir === LabelItem.TOP_RIGHT) {
       this._ctx.lineTo(this.point.x - this.ex, this.point.y + this.ey);
     } else {
       throw new Error(`Unsupported dir: ${this.dir}`);
@@ -99,13 +96,13 @@ class Item {
     const width = actualBoundingBoxRight + actualBoundingBoxLeft
     const height = actualBoundingBoxAscent + actualBoundingBoxDescent
     // this._ctx.textBaseline = 'bottom';
-    if (this.dir === Item.BOTTOM_LEFT) {
+    if (this.dir === LabelItem.BOTTOM_LEFT) {
       this._ctx.fillText(this._options.info, this.point.x + this.ex + this.padding, this.point.y - this.ey - this.padding);
-    } else if (this.dir === Item.BOTTOM_RIGHT) {
+    } else if (this.dir === LabelItem.BOTTOM_RIGHT) {
       this._ctx.fillText(this._options.info, this.point.x - this.ex - this.padding, this.point.y - this.ey - this.padding);
-    } else if (this.dir === Item.TOP_LEFT) {
+    } else if (this.dir === LabelItem.TOP_LEFT) {
       this._ctx.fillText(this._options.info, this.point.x + this.ex + this.padding, this.point.y + this.ey + this.padding + height);
-    } else if (this.dir === Item.TOP_RIGHT) {
+    } else if (this.dir === LabelItem.TOP_RIGHT) {
       this._ctx.fillText(this._options.info, this.point.x - this.ex - this.padding, this.point.y + this.ey + this.padding + height);
     } else {
       throw new Error(`Unsupported dir: ${this.dir}`);
@@ -118,16 +115,16 @@ class Item {
     let _height = height + this.padding * 2;
     let x = 0;
     let y = 0;
-    if (this.dir === Item.BOTTOM_LEFT) {
+    if (this.dir === LabelItem.BOTTOM_LEFT) {
       x = this.point.x + this.ex - width / 2;
       y = this.point.y - this.ey - (height + this.padding * 2);
-    } else if (this.dir === Item.BOTTOM_RIGHT) {
+    } else if (this.dir === LabelItem.BOTTOM_RIGHT) {
       x = this.point.x - this.ex - width / 2 - this.padding * 2;
       y = this.point.y - this.ey - (height + this.padding * 2);
-    } else if (this.dir === Item.TOP_LEFT) {
+    } else if (this.dir === LabelItem.TOP_LEFT) {
       x = this.point.x + this.ex - width / 2;
       y = this.point.y + this.ey;
-    } else if (this.dir === Item.TOP_RIGHT) {
+    } else if (this.dir === LabelItem.TOP_RIGHT) {
       x = this.point.x - this.ex - width / 2 - this.padding * 2;
       y = this.point.y + this.ey;
     } else {
@@ -139,4 +136,4 @@ class Item {
   }
 }
 
-export default Item
+export default LabelItem

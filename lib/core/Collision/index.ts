@@ -1,5 +1,5 @@
 import RBush from 'rbush'
-import Item from 'lib/core/Collision/item.ts';
+import CollisionItem from 'lib/core/Collision/CollisionItem.ts';
 import { set } from 'lodash-es'
 import { BBox, Directions, Id } from "types/core/Collision/item";
 import type { Map } from 'mapbox-gl'
@@ -7,11 +7,11 @@ import type { CollisionOptions, collisionItem } from "types/core/Collision"
 
 class Collision {
 
-  _tree: RBush<Item> = new RBush();
+  _tree: RBush<CollisionItem> = new RBush();
 
   _map: Map | undefined;
 
-  _collisionList: Array<Item> = [];
+  _collisionList: Array<CollisionItem> = [];
 
   constructor(config: CollisionOptions) {
     this._map = config.map;
@@ -28,7 +28,7 @@ class Collision {
     const position = this._map.project(collisionItem.lngLat)
     if (!position) return null;
 
-    const item = new Item({
+    const item = new CollisionItem({
       position,
       width: collisionItem.width,
       height: collisionItem.height,
@@ -41,7 +41,7 @@ class Collision {
     return item.getId();
   }
 
-  set(item: Item): Id {
+  set(item: CollisionItem): Id {
     const index = this._collisionList.findIndex(collision => collision.getId() === item.getId())
     if (index !== -1) {
       set(this._collisionList, index, item);

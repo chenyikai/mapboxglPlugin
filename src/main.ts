@@ -1,4 +1,4 @@
-import { Mapbox, ShipManage, NormalShip, Label, LabelItem } from '../index'
+import { Mapbox, ShipManage, NormalShip, Label } from '../index'
 import { shipData } from 'lib/module/ShipManage/data'
 import { LngLat } from "mapbox-gl";
 
@@ -28,13 +28,15 @@ function addLabel() {
   // setTimeout(() => {
   //   labelItem.setDir(LabelItem.TOP_RIGHT)
   // }, 3000)
-  label!.load(shipData.map(item => {
+  const item = label!.load(shipData.map(item => {
     const [ lat, lon ] = item.location.split(',')
     return {
       info: item.cnname || item.enname || item.mmsi,
       position: new LngLat(Number(lon), Number(lat)),
     }
   }))
+
+  console.log(item.map(ele => ele.bbox));
 }
 
 

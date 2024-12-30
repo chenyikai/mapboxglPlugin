@@ -7,10 +7,10 @@ import Ship from './lib/module/ShipManage/shipTypes/ship'
 import NormalShip from './lib/module/ShipManage/shipTypes/normalShip'
 
 import Collision from "lib/core/Collision";
-import Item from 'lib/core/Collision/item'
+import CollisionItem from './lib/core/Collision/CollisionItem'
 import Icon from 'lib/core/Icon'
 import Label from './lib/core/Label'
-import LabelItem from './lib/core/Label/Item'
+import LabelItem from './lib/core/Label/LabelItem'
 
 const version = '0.0.1'
 export {
@@ -22,7 +22,7 @@ export {
   Ship,
   NormalShip,
   Collision,
-  Item as CollisionItem,
+  CollisionItem as CollisionItem,
   Icon,
   Label,
   LabelItem

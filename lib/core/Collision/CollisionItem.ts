@@ -4,7 +4,7 @@ import { Point } from 'mapbox-gl'
 import { BBox as GeoJSONBBox, Feature, Polygon, GeoJsonProperties } from "geojson";
 import { BBox, Id, Directions, Scopes, ItemOptions } from 'types/core/Collision/item'
 
-class Item {
+class CollisionItem {
 
   visible: boolean = true
 
@@ -75,19 +75,19 @@ class Item {
   }
 
   get minX(): number {
-    return this._bbox[Item.MIN_X]
+    return this._bbox[CollisionItem.MIN_X]
   }
 
   get minY(): number {
-    return this._bbox[Item.MIN_Y]
+    return this._bbox[CollisionItem.MIN_Y]
   }
 
   get maxX(): number {
-    return this._bbox[Item.MAX_X]
+    return this._bbox[CollisionItem.MAX_X]
   }
 
   get maxY(): number {
-    return this._bbox[Item.MAX_Y]
+    return this._bbox[CollisionItem.MAX_Y]
   }
 
   setBBox() {
@@ -95,25 +95,25 @@ class Item {
     let maxY: number;
     let minX: number;
     let minY: number;
-    if (this._dir === Item.BOTTOM_RIGHT) {
+    if (this._dir === CollisionItem.BOTTOM_RIGHT) {
       maxX = this._position.x
       minY = this._position.y
 
       minX = maxX - ( this._width + this._expand.x )
       maxY = minY + this._height + this._expand.y
-    } else if (this._dir === Item.BOTTOM_LEFT) {
+    } else if (this._dir === CollisionItem.BOTTOM_LEFT) {
       minX = this._position.x
       minY = this._position.y
 
       maxX = minX + this._width + this._expand.x
       maxY = minY + this._height + this._expand.y
-    } else if (this._dir === Item.TOP_LEFT) {
+    } else if (this._dir === CollisionItem.TOP_LEFT) {
       minX = this._position.x
       maxY = this._position.y
 
       maxX = minX + this._width + this._expand.x
       minY = maxY - ( this._height + this._expand.y )
-    } else if (this._dir === Item.TOP_RIGHT) {
+    } else if (this._dir === CollisionItem.TOP_RIGHT) {
       maxX = this._position.x
       maxY = this._position.y
 
@@ -169,4 +169,4 @@ class Item {
   }
 }
 
-export default Item
+export default CollisionItem
