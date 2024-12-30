@@ -31,10 +31,12 @@
   },
   "dependencies": {
     "@turf/turf": "^7.1.0",
+    "@types/fabric": "^5.3.9",
     "@types/lodash-es": "^4.17.12",
     "@types/rbush": "^4.0.0",
     "@types/wellknown": "^0.5.8",
     "eventemitter3": "^5.0.1",
+    "fabric": "^5.5.0",
     "lodash-es": "^4.17.21",
     "mapbox-gl": "^3.8.0",
     "moment": "^2.30.1",

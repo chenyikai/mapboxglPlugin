@@ -44,7 +44,7 @@ class MapBox extends EventEmitter {
   }
 
   _onLoad(): void {
-    this.emit('loaded');
+    this.emit('loaded', this.getMap());
   }
 
   getMap(): Map {

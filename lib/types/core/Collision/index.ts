@@ -3,7 +3,7 @@ import type { Map, LngLat } from 'mapbox-gl';
 import type { GeoJsonProperties } from "geojson";
 export interface CollisionOptions {
     map: Map;
-    collisions: [];
+    collisions?: [];
 }
 export interface collisionItem {
     lngLat: LngLat;
