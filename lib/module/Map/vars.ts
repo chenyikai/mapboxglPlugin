@@ -4,7 +4,7 @@ import Layer from "lib/module/Layer";
 export const landStyle: StyleSpecification = {
   version: 8,
   name: "Basic",
-  // glyphs: "https://objects.aochensoft.com/oss/{fontstack}/{range}.pbf",
+  glyphs: "https://objects.aochensoft.com/oss/{fontstack}/{range}.pbf",
   sources: {
     base: {
       tiles: [

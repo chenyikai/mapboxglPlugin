@@ -12,6 +12,8 @@ import Icon from 'lib/core/Icon'
 import Label from './lib/core/Label'
 import LabelItem from './lib/core/Label/LabelItem'
 
+import Point from "./lib/module/Draw/module/Point";
+
 const version = '0.0.1'
 export {
   version,
@@ -25,5 +27,6 @@ export {
   CollisionItem as CollisionItem,
   Icon,
   Label,
-  LabelItem
+  LabelItem,
+  Point
 }

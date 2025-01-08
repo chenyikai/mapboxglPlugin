@@ -1,4 +1,4 @@
-import type { Map } from 'mapbox-gl'
+import type { LayerSpecification, SourceSpecification, Map } from "mapbox-gl";
 
 export function distanceToPx(map: Map, val: number): number {
   const maxWidth = 100;
@@ -30,4 +30,16 @@ function getRoundNum(num: any) {
 function getDecimalRoundNum(d: any) {
   const multiplier = Math.pow(10, Math.ceil(-Math.log(d) / Math.LN10));
   return Math.round(d * multiplier) / multiplier;
+}
+
+export function addSource(map: Map, id: string, source: SourceSpecification) {
+  if (!map.getSource(id)) {
+    map.addSource(id, source)
+  }
+}
+
+export function addLayer(map: Map, layer: LayerSpecification, beforeId?: string) {
+  if(!map.getLayer(layer.id)) {
+    map.addLayer(layer, beforeId)
+  }
 }
