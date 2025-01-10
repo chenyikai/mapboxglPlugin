@@ -40,7 +40,7 @@ class Icon {
           return reject(this.error(icon, 'The image has been loaded！'));
         }
 
-        this._map.addImage(icon.name, image as ImageBitmap | HTMLImageElement | ImageData);
+        this._map.addImage(icon.name, image as ImageBitmap | HTMLImageElement | ImageData, icon.options);
         resolve(this.success(icon));
       });
     })

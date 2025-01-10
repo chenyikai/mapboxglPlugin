@@ -1,17 +1,22 @@
 import EventEmitter from 'eventemitter3'
-import type { GeoJSONSource, LayerSpecification, Map } from "mapbox-gl";
+import { GeoJSONSource, LayerSpecification, Map, MapMouseEvent } from "mapbox-gl";
 import { Feature, Position, GeoJsonProperties } from "geojson";
 import { addSource, addLayer } from "lib/utils/util.ts";
+import { plotEvent } from 'types/module/Draw/plot.ts'
+import { COLD, HOT } from "lib/module/Draw/module/vars.ts";
 
 abstract class Plot extends EventEmitter {
   _map: Map;
-  visible: boolean = true;
-  check: boolean = true;
+  isVisible: boolean = true;
+  isCheck: boolean = true;
+  isHover: boolean = false;
+  source: string = COLD;
   sourceName: string;
 
   abstract id: string;
-  abstract coordinates: Position;
+  abstract coordinates: Position | Array<Position> | unknown;
   abstract properties: GeoJsonProperties;
+  abstract _event: plotEvent;
 
   protected constructor(map: Map, source: string, layers: Array<LayerSpecification> | LayerSpecification) {
     super();
@@ -35,6 +40,11 @@ abstract class Plot extends EventEmitter {
   }
 
   /**
+   * 开始
+   */
+  abstract start(): void;
+
+  /**
    * 定位
    */
   abstract position(): void;
@@ -54,33 +64,56 @@ abstract class Plot extends EventEmitter {
    */
   abstract focus(): void;
 
+  abstract _createFunc(value: boolean): void;
+
+  abstract _updateFunc(value: boolean): void;
+
+  abstract _residentFunc(value: boolean): void;
+
   /**
    * 移动
    * @param value 目标位置
    */
   abstract move(value: Position): void;
 
-  /**
-   * 设置选中状态
-   * @param value { boolean }
-   */
-  setCheck(value: boolean) {
-    this.check = value;
+  check(): void {
+    this.isCheck = true;
   }
 
-  /**
-   * 设置显隐状态
-   * @param value { boolean }
-   */
-  setVisible(value: boolean) {
-    this.visible = value;
+  unCheck(): void {
+    this.isCheck = false;
+  };
+
+  hover(): void {
+    this.isHover = true;
+    this.hot();
+  }
+
+  unHover() {
+    this.isHover = false;
+    this.cold();
+  }
+
+  visible() {
+    this.isVisible = true;
+  }
+
+  unVisible() {
+    this.isVisible = false;
+  }
+
+  hot() {
+    this.source = HOT;
+  }
+
+  cold() {
+    this.source = COLD;
   }
 
   /**
    * 渲染
    */
   _render(features: Array<Feature> | Feature) {
-    console.log(features, 'features');
     const source: GeoJSONSource | undefined = this._map.getSource(this.sourceName);
     if (source) {
       source.updateData({
@@ -93,6 +126,19 @@ abstract class Plot extends EventEmitter {
   setCursor(cursor: string) {
     const container = this._map.getContainer();
     container.style.cursor = cursor;
+  }
+
+  isSelf(feature: Feature): boolean {
+    return feature.properties?.id === this.id || feature.id === this.id || feature.properties?.belong === this.id;
+  }
+
+  isSelfUnderMouse(e: MapMouseEvent): boolean {
+    if (e.features?.length) {
+      const feature = e.features[0]
+      return this.isSelf(feature)
+    }
+
+    return false;
   }
 }
 

@@ -1,4 +1,4 @@
-import type { LayerSpecification, SourceSpecification, Map } from "mapbox-gl";
+import { FilterSpecification, LayerSpecification, SourceSpecification, Map } from "mapbox-gl";
 
 export function distanceToPx(map: Map, val: number): number {
   const maxWidth = 100;
@@ -39,7 +39,24 @@ export function addSource(map: Map, id: string, source: SourceSpecification) {
 }
 
 export function addLayer(map: Map, layer: LayerSpecification, beforeId?: string) {
-  if(!map.getLayer(layer.id)) {
-    map.addLayer(layer, beforeId)
+  addColdLayer(map, layer, beforeId);
+  addHotLayer(map, layer, beforeId);
+}
+
+export function addColdLayer(map: Map, layer: LayerSpecification, beforeId?: string) {
+  const id = `${layer.id}-cold`;
+  if(!map.getLayer(id)) {
+    map.addLayer({ ...layer, id }, beforeId)
+  }
+}
+
+export function addHotLayer(map: Map, layer: LayerSpecification, beforeId?: string) {
+  const id = `${layer.id}-hot`;
+  if(!map.getLayer(id)) {
+    const isHot: FilterSpecification = ["==", "source", "hot"]
+    if (Array.isArray(layer.filter)) {
+      layer.filter = [...layer.filter, isHot]
+    }
+    map.addLayer({ ...layer, id }, beforeId)
   }
 }
