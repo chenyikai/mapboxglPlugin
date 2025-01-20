@@ -23,6 +23,12 @@ import {
   POINT_SYMBOL_TOP_RIGHT_LAYER,
   POINT_SYMBOL_BOTTOM_LEFT_LAYER,
   POINT_SYMBOL_BOTTOM_RIGHT_LAYER,
+  CREATE_CURSOR,
+  CLICK_CURSOR,
+  MOVE_CURSOR,
+  HOVER_END_EMIT,
+  CLICK_EMIT,
+  HOVER_EMIT, NO_MOUSE_RESPONSE_CURSOR,
 } from "./vars.ts";
 import { plotEvent } from "types/module/Draw/plot.ts";
 import { PointOptions, pointType } from 'types/module/Draw/Point.ts'
@@ -45,7 +51,7 @@ class Point extends Plot {
       click: (e: MapMouseEvent) => {
         this.coordinates = [e.lngLat.lng, e.lngLat.lat];
         this._render(this.feature);
-        this.setCursor('pointer');
+        this.setCursor(CLICK_CURSOR);
 
         this._createFunc(false);
         this._residentFunc(true);
@@ -54,19 +60,20 @@ class Point extends Plot {
     update: {
       mousedown: (e: MapMouseEvent) => {
         e.preventDefault();
+        if (this.isSelfUnderMouse(e)) {
+          this.setCursor(MOVE_CURSOR);
 
-        this.setCursor('move');
-
-        this._map.on('mousemove', this._event.update.mousemove!)
-        this._map.once('mouseup', this._event.update.mouseup!)
+          this._map.on('mousemove', this._event.update.mousemove!)
+          this._map.once('mouseup', this._event.update.mouseup!)
+        }
       },
       mousemove: (e: MapMouseEvent) => {
-        this.setCursor('move');
+        this.setCursor(MOVE_CURSOR);
 
         this.update([e.lngLat.lng, e.lngLat.lat])
       },
       mouseup: (e: MapMouseEvent) => {
-        this.setCursor('pointer');
+        this.setCursor(CLICK_CURSOR);
 
         this._map.off('mousemove', this._event.update.mousemove!)
 
@@ -82,26 +89,34 @@ class Point extends Plot {
     },
     resident: {
       mouseenter: (e: MapMouseEvent) => {
-        this.setCursor('pointer');
-        if(this.isSelfUnderMouse(e)) {
-          this.hover();
+        if (NO_MOUSE_RESPONSE_CURSOR.includes(this.getCursor())) return;
+
+        if (this.isSelfUnderMouse(e)) {
+          this.hover(this.feature);
           this._render(this.feature);
+          this.emit(HOVER_EMIT, this.feature)
 
           this._updateFunc(true)
         }
       },
       mouseleave: () => {
-        this.setCursor('');
-        this.unHover();
-        this._render(this.feature);
+        if (NO_MOUSE_RESPONSE_CURSOR.includes(this.getCursor())) return;
 
-        this._updateFunc(false)
+        if (this.hoverFeature) {
+          this.unHover();
+          this._render(this.feature);
+          this.emit(HOVER_END_EMIT, this.feature)
+
+          this._updateFunc(false)
+        }
       },
       click: (e: MapMouseEvent) => {
+        if (NO_MOUSE_RESPONSE_CURSOR.includes(this.getCursor())) return;
+
         if (e.features?.length) {
           const feature = e.features[0]
           if (this.isSelf(feature)) {
-            this.emit('click', feature);
+            this.emit(CLICK_EMIT, feature);
           }
         }
       },
@@ -165,24 +180,29 @@ class Point extends Plot {
       ...this.isHover ? this.hoverStyle : {},
     }
 
-    if (this.meta === 'circle') {
-      props = {
-        ...props,
-        ...this._options.circleStyle,
-      }
-    } else if (this.meta === 'icon') {
-      props.icon = this._options.iconStyle?.icon
-      props = {
-        ...props,
-        ...this._options.iconStyle,
-        anchor: this._options.iconStyle?.anchor || 'center',
-        icon: this._options.iconStyle?.icon,
-      }
-    } else if (this.meta === 'index') {
-      props = {
-        ...props,
-        ...this._options.indexStyle,
-      }
+    switch (this.meta) {
+      case "circle":
+        props = {
+          ...props,
+          ...this._options.circleStyle,
+        }
+        break;
+      case "icon":
+        props = {
+          ...props,
+          ...this._options.iconStyle,
+          anchor: this._options.iconStyle?.anchor || 'center',
+          icon: this._options.iconStyle?.icon,
+        }
+        break;
+      case "index":
+        props = {
+          ...props,
+          ...this._options.indexStyle,
+        }
+        break;
+      default:
+        throw new Error(`Unknown feature type ${this.meta}`);
     }
 
     return point(this.coordinates, { ...this.properties, ...props, id: this.id }, {
@@ -212,8 +232,9 @@ class Point extends Plot {
   }
 
   start() {
-    this.setCursor('crosshair');
-    this._createFunc(true)
+    this._residentFunc(false);
+    this._createFunc(true);
+    this.setCursor(CREATE_CURSOR);
   }
 
   update(value: Position) {
@@ -245,23 +266,27 @@ class Point extends Plot {
   }
 
   select() {
+    this._render(this.feature);
+  }
+
+  unSelect() {
+    this._render(this.feature);
+  }
+
+  focus() {
     this.check()
-    this._render(this.feature);
   }
 
-  unselect() {
+  unFocus() {
     this.unCheck()
-    this._render(this.feature);
   }
-
-  focus() {}
 
   _createFunc(value: boolean) {
     this._map[value ? 'on' : 'off']('click', this._event.create.click!)
   }
 
   _updateFunc(value: boolean) {
-    this._map[value ? 'on' : 'off']('mousedown', this.layer[COLD], this._event.update.mousedown!)
+    this._map[value ? 'on' : 'off']('mousedown', this.layer[HOT], this._event.update.mousedown!)
   }
 
   _residentFunc(value: boolean) {

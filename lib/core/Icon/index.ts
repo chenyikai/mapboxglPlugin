@@ -39,6 +39,7 @@ class Icon {
         if (this._map.hasImage(icon.name)) {
           return reject(this.error(icon, 'The image has been loaded！'));
         }
+        console.log(image, 'image');
 
         this._map.addImage(icon.name, image as ImageBitmap | HTMLImageElement | ImageData, icon.options);
         resolve(this.success(icon));

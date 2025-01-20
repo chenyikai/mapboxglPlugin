@@ -2,7 +2,8 @@ import {
   Mapbox,
   Point,
   LineString,
-  Icon
+  Icon,
+  Store
   // ShipManage,
   // NormalShip,
   // Label
@@ -71,38 +72,42 @@ mapbox.on('loaded', (map) => {
     }
   ])
 
+  const store1 = Store.getInstance(map);
+  const store2 = Store.getInstance(map);
+  console.log(store1 === store2);
+
   // const point = new Point(map, {
   //   // coordinates: [122.106863, 30.016028],
   //   type: 'index',
   //   name: 1
   // })
 
-  // new Point(map, {
-  //   type: 'circle',
-  //   coordinates: [0, 0]
-  // })
+  new Point(map, {
+    id: '1',
+    type: 'circle',
+    coordinates: [0, 0]
+  })
   //
   // new Point(map, {
+  //   id: '2',
   //   type: 'circle',
   //   coordinates: [1, 1]
   // })
-  //
+
   // new Point(map, {
   //   type: 'index',
   //   name: 1,
   //   coordinates: [2, 2],
   // })
-  //
-  const iconPoint = new Point(map, {
+
+  new Point(map, {
     type: "icon",
-    immediate: true,
-    coordinates: [0, 0],
+    // coordinates: [0, 0],
     iconStyle: {
       icon: 'fire',
       anchor: 'center'
     }
-  })
-  console.log(iconPoint);
+  }).start();
 
   // @ts-ignore
   // const line = new LineString(map, {

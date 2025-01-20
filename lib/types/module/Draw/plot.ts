@@ -1,4 +1,6 @@
-import { MapMouseEvent, MapMouseEventType } from "mapbox-gl";
+import { MapMouseEvent, MapMouseEventType, MapEvents } from "mapbox-gl";
+
+export type PlotEvent = 'hover' | 'hoverend' | 'click';
 
 export type eventType = 'create' | 'update' | 'resident';
 
@@ -9,3 +11,5 @@ export type plotEvent = {
     [key in MapMouseEventType | customEvent]: (e: MapMouseEvent) => void;
   }>
 };
+
+export type EventKey = keyof MapEvents & string;

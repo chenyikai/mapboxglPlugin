@@ -15,6 +15,10 @@ import LabelItem from './lib/core/Label/LabelItem'
 import Point from "./lib/module/Draw/module/Point";
 import LineString from "./lib/module/Draw/module/LineString";
 
+import Store from './lib/store'
+
+import * as Utils from './lib/utils/util'
+
 const version = '0.0.1'
 export {
   version,
@@ -30,5 +34,7 @@ export {
   Label,
   LabelItem,
   Point,
-  LineString
+  LineString,
+  Utils,
+  Store
 }

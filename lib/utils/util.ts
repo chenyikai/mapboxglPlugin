@@ -1,4 +1,7 @@
 import { FilterSpecification, LayerSpecification, SourceSpecification, Map } from "mapbox-gl";
+import { EventKey } from "types/module/Draw/plot.ts";
+
+const _listeners: any = {};
 
 export function distanceToPx(map: Map, val: number): number {
   const maxWidth = 100;
@@ -58,5 +61,30 @@ export function addHotLayer(map: Map, layer: LayerSpecification, beforeId?: stri
       layer.filter = [...layer.filter, isHot]
     }
     map.addLayer({ ...layer, id }, beforeId)
+  }
+}
+
+
+export function banListener(map: Map, keys: EventKey | Array<EventKey>) {
+  if (Array.isArray(keys)) {
+    keys.forEach(key => {
+      _listeners[key] = map._listeners[key];
+      map._listeners[key] = [];
+    })
+  } else {
+    _listeners[keys] = map._listeners[keys];
+    map._listeners[keys] = [];
+  }
+}
+
+export function unBanListener(map: Map, keys: EventKey | Array<EventKey>) {
+  if (Array.isArray(keys)) {
+    keys.forEach(key => {
+      map._listeners[key] = _listeners[key];
+      _listeners[key] = [];
+    })
+  } else {
+    map._listeners[keys] = _listeners[keys];
+    _listeners[keys] = [];
   }
 }

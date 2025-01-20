@@ -1,4 +1,5 @@
-import { DataDrivenPropertyValueSpecification, LayerSpecification } from 'mapbox-gl'
+import { DataDrivenPropertyValueSpecification, LayerSpecification } from 'mapbox-gl';
+import { PlotEvent } from 'types/module/Draw/plot.ts';
 
 /** ------------------------------------------------ 公用变量 --------------------------------------------------------**/
 
@@ -17,6 +18,22 @@ export const DIRECTION = {
   BOTTOM_LEFT: 'bottom-left',
   BOTTOM_RIGHT: 'bottom-right',
 }
+
+// create的cursor
+export const CREATE_CURSOR: string = 'crosshair';
+
+export const CLICK_CURSOR: string = 'pointer';
+
+export const MOVE_CURSOR: string = 'move';
+
+export const HOVER_EMIT: PlotEvent = 'hover';
+
+export const HOVER_END_EMIT: PlotEvent = 'hoverend';
+
+export const CLICK_EMIT: PlotEvent = 'click';
+
+// 不响应鼠标事件cursor
+export const NO_MOUSE_RESPONSE_CURSOR: Array<string> = [CREATE_CURSOR]
 
 /** ------------------------------------------------ 点类变量 --------------------------------------------------------**/
 

@@ -1,5 +1,5 @@
 import EventEmitter from 'eventemitter3'
-import { GeoJSONSource, LayerSpecification, Map, MapMouseEvent } from "mapbox-gl";
+import { GeoJSONSource, LayerSpecification, Map, MapMouseEvent} from "mapbox-gl";
 import { Feature, Position, GeoJsonProperties } from "geojson";
 import { addSource, addLayer } from "lib/utils/util.ts";
 import { plotEvent } from 'types/module/Draw/plot.ts'
@@ -8,10 +8,16 @@ import { COLD, HOT } from "lib/module/Draw/module/vars.ts";
 abstract class Plot extends EventEmitter {
   _map: Map;
   isVisible: boolean = true;
+
   isCheck: boolean = true;
+
   isHover: boolean = false;
+  hoverFeature: Feature | null = null;
+
   source: string = COLD;
   sourceName: string;
+
+  lastCursor: string = "";
 
   abstract id: string;
   abstract coordinates: Position | Array<Position> | unknown;
@@ -57,7 +63,7 @@ abstract class Plot extends EventEmitter {
   /**
    * 取消选中
    */
-  abstract unselect(): void;
+  abstract unSelect(): void;
 
   /**
    * 聚焦
@@ -84,13 +90,19 @@ abstract class Plot extends EventEmitter {
     this.isCheck = false;
   };
 
-  hover(): void {
+  hover(feature: Feature): void {
+    this.hoverFeature = feature;
+    this.lastCursor = this._map.getContainer().style.cursor;
     this.isHover = true;
+    this.setCursor('pointer');
     this.hot();
   }
 
   unHover() {
+    this.hoverFeature = null;
     this.isHover = false;
+    this.setCursor(this.lastCursor);
+    this.lastCursor = '';
     this.cold();
   }
 
@@ -120,12 +132,17 @@ abstract class Plot extends EventEmitter {
         type: "FeatureCollection",
         features: Array.isArray(features) ? features : [features]
       })
+      this.emit('render', features)
     }
   }
 
   setCursor(cursor: string) {
     const container = this._map.getContainer();
     container.style.cursor = cursor;
+  }
+
+  getCursor(): string {
+    return this._map.getContainer().style.cursor;
   }
 
   isSelf(feature: Feature): boolean {
