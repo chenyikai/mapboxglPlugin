@@ -1,11 +1,11 @@
-import { GeoJsonProperties, Position } from "geojson";
+import { GeoJsonProperties } from "geojson";
 import { DataDrivenPropertyValueSpecification } from 'mapbox-gl'
 
 export interface PointOptions {
   id?: string;
   type: pointType;
   name?: string | number;
-  coordinates?: Position;
+  coordinates?: [number, number];
   immediate?: boolean
   properties?: GeoJsonProperties;
   circleStyle?: {

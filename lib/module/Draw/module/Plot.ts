@@ -1,9 +1,9 @@
 import EventEmitter from 'eventemitter3'
-import { GeoJSONSource, LayerSpecification, Map, MapMouseEvent} from "mapbox-gl";
+import { GeoJSONSource, LayerSpecification, Map, MapMouseEvent } from "mapbox-gl";
 import { Feature, Position, GeoJsonProperties } from "geojson";
 import { addSource, addLayer } from "lib/utils/util.ts";
 import { plotEvent } from 'types/module/Draw/plot.ts'
-import { COLD, HOT } from "lib/module/Draw/module/vars.ts";
+import { COLD, FOCUS_LAYER, FOCUS_LAYER_NAME, FOCUS_SOURCE_NAME, HOT } from "lib/module/Draw/module/vars.ts";
 
 abstract class Plot extends EventEmitter {
   _map: Map;
@@ -43,6 +43,8 @@ abstract class Plot extends EventEmitter {
     } else {
       addLayer(this._map, layers);
     }
+
+    this._initFocus();
   }
 
   /**
@@ -51,9 +53,26 @@ abstract class Plot extends EventEmitter {
   abstract start(): void;
 
   /**
+   * 更新
+   * @param value 目标位置
+   */
+  abstract update(value: Position): void;
+
+  /**
+   * 移除
+   */
+  abstract remove() :void;
+
+  /**
    * 定位
    */
   abstract position(): void;
+
+  /**
+   * 移动
+   * @param value 目标位置
+   */
+  abstract move(value: Position): void;
 
   /**
    * 选中
@@ -70,17 +89,18 @@ abstract class Plot extends EventEmitter {
    */
   abstract focus(): void;
 
+  /**
+   * 取消聚焦
+   */
+  abstract unFocus(): void;
+
+  abstract refresh(): void;
+
   abstract _createFunc(value: boolean): void;
 
   abstract _updateFunc(value: boolean): void;
 
   abstract _residentFunc(value: boolean): void;
-
-  /**
-   * 移动
-   * @param value 目标位置
-   */
-  abstract move(value: Position): void;
 
   check(): void {
     this.isCheck = true;
@@ -125,8 +145,8 @@ abstract class Plot extends EventEmitter {
   /**
    * 渲染
    */
-  _render(features: Array<Feature> | Feature) {
-    const source: GeoJSONSource | undefined = this._map.getSource(this.sourceName);
+  _render(features: Array<Feature> | Feature, target?: string) {
+    const source: GeoJSONSource | undefined = this._map.getSource(target || this.sourceName);
     if (source) {
       source.updateData({
         type: "FeatureCollection",
@@ -156,6 +176,23 @@ abstract class Plot extends EventEmitter {
     }
 
     return false;
+  }
+
+  _initFocus() {
+    if (!this._map.getSource(FOCUS_SOURCE_NAME)) {
+      this._map.addSource(FOCUS_SOURCE_NAME, {
+        type: 'geojson',
+        dynamic: true,
+        data: {
+          type: 'FeatureCollection',
+          features: []
+        }
+      })
+    }
+
+    if(!this._map.getLayer(FOCUS_LAYER_NAME)) {
+      this._map.addLayer(FOCUS_LAYER)
+    }
   }
 }
 

@@ -35,6 +35,21 @@ export const CLICK_EMIT: PlotEvent = 'click';
 // 不响应鼠标事件cursor
 export const NO_MOUSE_RESPONSE_CURSOR: Array<string> = [CREATE_CURSOR]
 
+export const FOCUS_SOURCE_NAME: string = 'mapbox-gl-focus-source'
+
+export const FOCUS_LAYER_NAME = 'mapbox-gl-focus-layer'
+
+export const FOCUS_LAYER: LayerSpecification = {
+  id: FOCUS_LAYER_NAME,
+  type: "line",
+  source: FOCUS_SOURCE_NAME,
+  paint: {
+    "line-color": "#f00",
+    "line-width": 3,
+  },
+  layout: {},
+}
+
 /** ------------------------------------------------ 点类变量 --------------------------------------------------------**/
 
 export const CIRCLE = 'circle';
@@ -42,6 +57,16 @@ export const CIRCLE = 'circle';
 export const ICON = 'icon';
 
 export const INDEX = 'index';
+
+export const FOCUS_PADDING = 10;
+
+export const DEFAULT_CIRCLE_RADIUS: number = 8;
+
+export const DEFAULT_CIRCLE_COLOR: string = '#fff';
+
+export const DEFAULT_CIRCLE_STROKE_WIDTH: number = 2;
+
+export const DEFAULT_CIRCLE_STROKE_COLOR: string = '#4093ff';
 
 export const POINT_LAYER_NAME = 'plot-point-layer'
 
@@ -62,10 +87,10 @@ export const POINT_LAYER: LayerSpecification = {
   filter: ["all", ["==", "$type", "Point"], ["==", "meta", "circle"]],
   source: POINT_SOURCE_NAME,
   paint: {
-    'circle-radius': ['case', ['has', 'circleRadius'], ['get', 'circleRadius'], 8],
-    'circle-color': ['case', ['has', 'circleColor'], ['get', 'circleColor'], "#fff"],
-    "circle-stroke-width": ['case', ['has', 'strokeWidth'], ['get', 'strokeWidth'], 2],
-    "circle-stroke-color": ['case', ['has', 'strokeColor'], ['get', 'strokeColor'], "#4093ff"],
+    'circle-radius': ['case', ['has', 'circleRadius'], ['get', 'circleRadius'], DEFAULT_CIRCLE_RADIUS],
+    'circle-color': ['case', ['has', 'circleColor'], ['get', 'circleColor'], DEFAULT_CIRCLE_COLOR],
+    "circle-stroke-width": ['case', ['has', 'strokeWidth'], ['get', 'strokeWidth'], DEFAULT_CIRCLE_STROKE_WIDTH],
+    "circle-stroke-color": ['case', ['has', 'strokeColor'], ['get', 'strokeColor'], DEFAULT_CIRCLE_STROKE_COLOR],
   },
 }
 

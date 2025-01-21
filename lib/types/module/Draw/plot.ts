@@ -13,3 +13,5 @@ export type plotEvent = {
 };
 
 export type EventKey = keyof MapEvents & string;
+
+// export type Focus

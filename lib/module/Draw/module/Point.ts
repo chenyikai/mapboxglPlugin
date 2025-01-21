@@ -1,8 +1,8 @@
-import { LngLatLike, Map, MapMouseEvent } from "mapbox-gl";
-import { point } from "@turf/turf";
+import { LngLatBoundsLike, LngLatLike, Map, MapMouseEvent } from "mapbox-gl";
+import { point, featureCollection, envelope } from "@turf/turf";
 import Plot from './Plot.ts'
 import { v4 as uuidV4 } from 'uuid';
-import { Feature, GeoJsonProperties, Position } from "geojson";
+import { Feature, GeoJsonProperties } from "geojson";
 import {
   COLD,
   HOT,
@@ -15,23 +15,28 @@ import {
   POINT_INDEX_TEXT_LAYER,
   EVENTS,
   POINT_SYMBOL_CENTER_LAYER,
-  POINT_SYMBOL_LEFT_LAYER,
-  POINT_SYMBOL_RIGHT_LAYER,
-  POINT_SYMBOL_TOP_LAYER,
-  POINT_SYMBOL_BOTTOM_LAYER,
-  POINT_SYMBOL_TOP_LEFT_LAYER,
-  POINT_SYMBOL_TOP_RIGHT_LAYER,
-  POINT_SYMBOL_BOTTOM_LEFT_LAYER,
-  POINT_SYMBOL_BOTTOM_RIGHT_LAYER,
+  // POINT_SYMBOL_LEFT_LAYER,
+  // POINT_SYMBOL_RIGHT_LAYER,
+  // POINT_SYMBOL_TOP_LAYER,
+  // POINT_SYMBOL_BOTTOM_LAYER,
+  // POINT_SYMBOL_TOP_LEFT_LAYER,
+  // POINT_SYMBOL_TOP_RIGHT_LAYER,
+  // POINT_SYMBOL_BOTTOM_LEFT_LAYER,
+  // POINT_SYMBOL_BOTTOM_RIGHT_LAYER,
   CREATE_CURSOR,
   CLICK_CURSOR,
   MOVE_CURSOR,
   HOVER_END_EMIT,
   CLICK_EMIT,
-  HOVER_EMIT, NO_MOUSE_RESPONSE_CURSOR,
+  HOVER_EMIT,
+  NO_MOUSE_RESPONSE_CURSOR,
+  DEFAULT_CIRCLE_RADIUS,
+  DEFAULT_CIRCLE_STROKE_WIDTH,
+  FOCUS_PADDING,
 } from "./vars.ts";
 import { plotEvent } from "types/module/Draw/plot.ts";
 import { PointOptions, pointType } from 'types/module/Draw/Point.ts'
+import { focus } from "lib/utils/util.ts";
 
 
 class Point extends Plot {
@@ -40,7 +45,7 @@ class Point extends Plot {
 
   _options: PointOptions;
 
-  coordinates: Position;
+  coordinates: [number, number];
 
   id: string;
 
@@ -50,7 +55,7 @@ class Point extends Plot {
     create: {
       click: (e: MapMouseEvent) => {
         this.coordinates = [e.lngLat.lng, e.lngLat.lat];
-        this._render(this.feature);
+        this.refresh();
         this.setCursor(CLICK_CURSOR);
 
         this._createFunc(false);
@@ -93,7 +98,7 @@ class Point extends Plot {
 
         if (this.isSelfUnderMouse(e)) {
           this.hover(this.feature);
-          this._render(this.feature);
+          this.refresh();
           this.emit(HOVER_EMIT, this.feature)
 
           this._updateFunc(true)
@@ -104,7 +109,7 @@ class Point extends Plot {
 
         if (this.hoverFeature) {
           this.unHover();
-          this._render(this.feature);
+          this.refresh();
           this.emit(HOVER_END_EMIT, this.feature)
 
           this._updateFunc(false)
@@ -129,14 +134,14 @@ class Point extends Plot {
       POINT_INDEX_LAYER,
       POINT_INDEX_TEXT_LAYER,
       POINT_SYMBOL_CENTER_LAYER,
-      POINT_SYMBOL_LEFT_LAYER,
-      POINT_SYMBOL_RIGHT_LAYER,
-      POINT_SYMBOL_TOP_LAYER,
-      POINT_SYMBOL_BOTTOM_LAYER,
-      POINT_SYMBOL_TOP_LEFT_LAYER,
-      POINT_SYMBOL_TOP_RIGHT_LAYER,
-      POINT_SYMBOL_BOTTOM_LEFT_LAYER,
-      POINT_SYMBOL_BOTTOM_RIGHT_LAYER
+      // POINT_SYMBOL_LEFT_LAYER,
+      // POINT_SYMBOL_RIGHT_LAYER,
+      // POINT_SYMBOL_TOP_LAYER,
+      // POINT_SYMBOL_BOTTOM_LAYER,
+      // POINT_SYMBOL_TOP_LEFT_LAYER,
+      // POINT_SYMBOL_TOP_RIGHT_LAYER,
+      // POINT_SYMBOL_BOTTOM_LEFT_LAYER,
+      // POINT_SYMBOL_BOTTOM_RIGHT_LAYER
     ]);
     this._options = options;
     this.id = this._options.id || uuidV4();
@@ -146,13 +151,13 @@ class Point extends Plot {
     if (this.coordinates.toString() === Point.EMPTY) {
       this._options.immediate && this.start();
     } else {
-      this._render(this.feature);
+      this.refresh();
       this._residentFunc(true);
     }
   }
 
 
-  get hoverStyle(): GeoJsonProperties {
+  get activeStyle(): GeoJsonProperties {
     const styleMap = {
       'circle': {
         strokeColor: '#f00',
@@ -171,13 +176,13 @@ class Point extends Plot {
     return this._options.type
   }
 
-  get feature(): Feature {
+  get style() {
     let props: GeoJsonProperties = {
       name: this._options.name,
       meta: this.meta,
       hover: this.isHover,
       source: this.source,
-      ...this.isHover ? this.hoverStyle : {},
+      ...this.isHover ? this.activeStyle : {},
     }
 
     switch (this.meta) {
@@ -205,7 +210,11 @@ class Point extends Plot {
         throw new Error(`Unknown feature type ${this.meta}`);
     }
 
-    return point(this.coordinates, { ...this.properties, ...props, id: this.id }, {
+    return { ...this.properties, ...props }
+  }
+
+  get feature(): Feature {
+    return point(this.coordinates, { ...this.style, id: this.id }, {
       id: this.id,
     })
   }
@@ -231,13 +240,27 @@ class Point extends Plot {
     return metaMap[this.meta];
   }
 
+  get focusParams() {
+    // if (this.meta === 'circle') {
+      const {x, y} = this._map.project(this.coordinates)
+      const { circleRadius, strokeWidth } = this.style
+      const width = (circleRadius || DEFAULT_CIRCLE_RADIUS) + ( strokeWidth || DEFAULT_CIRCLE_STROKE_WIDTH ) * 2 + FOCUS_PADDING * 2;
+      const { bbox } = envelope(featureCollection([
+        point(this._map.unproject([x - width / 2, y - width / 2]).toArray()),
+        point(this._map.unproject([x + width / 2, y + width / 2]).toArray())
+      ]))
+
+      return { bbox, width }
+    // }
+  }
+
   start() {
     this._residentFunc(false);
     this._createFunc(true);
     this.setCursor(CREATE_CURSOR);
   }
 
-  update(value: Position) {
+  update(value: [number, number]) {
     this.move(value);
     this.emit('update', this.feature)
     this._map.fire(EVENTS.POINT_UPDATE, this.feature);
@@ -249,10 +272,10 @@ class Point extends Plot {
     this._residentFunc(false);
   }
 
-  move(value: Position): void {
+  move(value: [number, number]): void {
     this.coordinates = value;
 
-    this._render(this.feature);
+    this.refresh();
     this.emit('move', this.feature)
     this._map.fire(EVENTS.POINT_MOVE, this.feature);
   }
@@ -266,19 +289,35 @@ class Point extends Plot {
   }
 
   select() {
-    this._render(this.feature);
+    this.refresh();
   }
 
   unSelect() {
-    this._render(this.feature);
+    this.refresh();
   }
 
   focus() {
     this.check()
+    const id = focus(this._map, {
+      bbox: this.focusParams.bbox as LngLatBoundsLike,
+      width: this.focusParams.width
+    })
+
+    this._map.on('zoomend', () => {
+      focus(this._map, {
+        id,
+        bbox: this.focusParams.bbox as LngLatBoundsLike,
+        width: this.focusParams.width
+      })
+    })
   }
 
   unFocus() {
     this.unCheck()
+  }
+
+  refresh() {
+    this._render(this.feature)
   }
 
   _createFunc(value: boolean) {

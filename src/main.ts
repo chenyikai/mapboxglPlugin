@@ -74,7 +74,7 @@ mapbox.on('loaded', (map) => {
 
   const store1 = Store.getInstance(map);
   const store2 = Store.getInstance(map);
-  console.log(store1 === store2);
+  // console.log(store1 === store2);
 
   // const point = new Point(map, {
   //   // coordinates: [122.106863, 30.016028],
@@ -83,16 +83,11 @@ mapbox.on('loaded', (map) => {
   // })
 
   new Point(map, {
-    id: '1',
+    id: '0',
     type: 'circle',
     coordinates: [0, 0]
-  })
-  //
-  // new Point(map, {
-  //   id: '2',
-  //   type: 'circle',
-  //   coordinates: [1, 1]
-  // })
+  }).focus()
+
 
   // new Point(map, {
   //   type: 'index',
@@ -100,14 +95,14 @@ mapbox.on('loaded', (map) => {
   //   coordinates: [2, 2],
   // })
 
-  new Point(map, {
-    type: "icon",
-    // coordinates: [0, 0],
-    iconStyle: {
-      icon: 'fire',
-      anchor: 'center'
-    }
-  }).start();
+  // new Point(map, {
+  //   type: "icon",
+  //   // coordinates: [0, 0],
+  //   iconStyle: {
+  //     icon: 'fire',
+  //     anchor: 'center'
+  //   }
+  // }).start();
 
   // @ts-ignore
   // const line = new LineString(map, {
