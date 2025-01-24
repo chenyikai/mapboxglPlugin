@@ -1,17 +1,18 @@
-import { MapMouseEvent, MapMouseEventType, MapEvents } from "mapbox-gl";
+import { MapEventType } from "mapbox-gl";
 
 export type PlotEvent = 'hover' | 'hoverend' | 'click';
 
-export type eventType = 'create' | 'update' | 'resident';
+export type eventType = 'create' | 'update' | 'resident' | 'focus';
 
 export type customEvent = 'pointMove'
 
+export type PlotEventKey = MapEventType | customEvent;
+
 export type plotEvent = {
   [key in eventType]: Partial<{
-    [key in MapMouseEventType | customEvent]: (e: MapMouseEvent) => void;
+    [key in PlotEventKey]: (e: any) => void;
   }>
 };
 
-export type EventKey = keyof MapEvents & string;
 
 // export type Focus

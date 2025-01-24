@@ -11,7 +11,7 @@ class Draw extends EventEmitter {
     this._options = options;
     this._map = map;
   }
-  
+
   factory() {}
 
   start(): Promise<string> {
@@ -26,7 +26,9 @@ class Draw extends EventEmitter {
 
   stop() {}
 
-  create() {}
+  create(type, options: object) {}
+
+  add() {}
 
   delete() {}
 

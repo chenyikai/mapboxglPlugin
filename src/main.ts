@@ -14,10 +14,10 @@ import {
 const mapbox = new Mapbox({
   container: "map",
   type: Mapbox.LAND,
-  // center: [122.106863, 30.016028],
-  center: [0, 0],
-  zoom: 5,
-  // zoom: 14,
+  center: [122.106863, 30.016028],
+  // center: [0, 0],
+  // zoom: 5,
+  zoom: 14,
 })
 
 // let label = null
@@ -82,11 +82,10 @@ mapbox.on('loaded', (map) => {
   //   name: 1
   // })
 
-  new Point(map, {
-    id: '0',
+  const circlePoint = new Point(map, {
     type: 'circle',
-    coordinates: [0, 0]
-  }).focus()
+    coordinates: [122.106863, 30.016028],
+  });
 
 
   // new Point(map, {
@@ -95,14 +94,26 @@ mapbox.on('loaded', (map) => {
   //   coordinates: [2, 2],
   // })
 
+  new Point(map, {
+    type: "icon",
+    coordinates: [122.106863, 30.016028],
+    iconStyle: {
+      icon: 'fire',
+      anchor: 'center',
+      iconSize: 0.7
+    }
+  })
+
+
+
   // new Point(map, {
   //   type: "icon",
-  //   // coordinates: [0, 0],
+  //   coordinates: [122.106863, 30.016028],
   //   iconStyle: {
   //     icon: 'fire',
   //     anchor: 'center'
   //   }
-  // }).start();
+  // })
 
   // @ts-ignore
   // const line = new LineString(map, {

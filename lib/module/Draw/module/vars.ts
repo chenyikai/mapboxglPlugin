@@ -1,4 +1,9 @@
-import { DataDrivenPropertyValueSpecification, LayerSpecification } from 'mapbox-gl';
+import {
+  CircleLayerSpecification,
+  DataDrivenPropertyValueSpecification,
+  LayerSpecification,
+  SymbolLayerSpecification
+} from "mapbox-gl";
 import { PlotEvent } from 'types/module/Draw/plot.ts';
 
 /** ------------------------------------------------ 公用变量 --------------------------------------------------------**/
@@ -35,6 +40,8 @@ export const CLICK_EMIT: PlotEvent = 'click';
 // 不响应鼠标事件cursor
 export const NO_MOUSE_RESPONSE_CURSOR: Array<string> = [CREATE_CURSOR]
 
+/** ------------------------------------------------ 聚焦图层 --------------------------------------------------------**/
+
 export const FOCUS_SOURCE_NAME: string = 'mapbox-gl-focus-source'
 
 export const FOCUS_LAYER_NAME = 'mapbox-gl-focus-layer'
@@ -68,7 +75,7 @@ export const DEFAULT_CIRCLE_STROKE_WIDTH: number = 2;
 
 export const DEFAULT_CIRCLE_STROKE_COLOR: string = '#4093ff';
 
-export const POINT_LAYER_NAME = 'plot-point-layer'
+export const POINT_CIRCLE_LAYER_NAME = 'plot-point-layer'
 
 export const POINT_ICON_LAYER_NAME = 'plot-symbol-point-layer'
 
@@ -81,8 +88,8 @@ export const POINT_SOURCE_NAME = 'plot-point'
 /**
  * circle图层
  */
-export const POINT_LAYER: LayerSpecification = {
-  id: POINT_LAYER_NAME,
+export const POINT_LAYER: CircleLayerSpecification = {
+  id: POINT_CIRCLE_LAYER_NAME,
   type: "circle",
   filter: ["all", ["==", "$type", "Point"], ["==", "meta", "circle"]],
   source: POINT_SOURCE_NAME,
@@ -94,16 +101,20 @@ export const POINT_LAYER: LayerSpecification = {
   },
 }
 
+export const POINT_CIRCLE_LAYERS: Array<CircleLayerSpecification> = [POINT_LAYER];
+
 /**
  * icon图层
  */
 
-const iconAllowOverlap = true;
-const iconImage: DataDrivenPropertyValueSpecification<string> = ["get", "icon"];
-const iconSize = 1;
-const filter = ["all", ["==", "$type", "Point"], ["==", "meta", "icon"]]
+export const iconAllowOverlap: boolean = true;
+export const iconImage: DataDrivenPropertyValueSpecification<string> = ["get", "icon"];
+export const defaultIconSize = 1;
+export const iconSize: DataDrivenPropertyValueSpecification<string> = ['case', ['has', 'iconSize'], ['get', 'iconSize'], defaultIconSize];
+export const iconRotate: DataDrivenPropertyValueSpecification<string> = ['case', ['has', 'iconRotate'], ['get', 'iconRotate'], 0];
+export const filter = ["all", ["==", "$type", "Point"], ["==", "meta", "icon"]]
 
-export const POINT_SYMBOL_CENTER_LAYER: LayerSpecification = {
+export const POINT_SYMBOL_CENTER_LAYER: SymbolLayerSpecification = {
   id: `${POINT_ICON_LAYER_NAME}-${DIRECTION.CENTER}`,
   type: "symbol",
   filter: [...filter, ["==", "anchor", "center"]],
@@ -112,124 +123,16 @@ export const POINT_SYMBOL_CENTER_LAYER: LayerSpecification = {
     "icon-allow-overlap": iconAllowOverlap,
     "icon-anchor": "center",
     "icon-image": iconImage,
-    "icon-size": iconSize
+    "icon-size": iconSize,
+    "icon-rotate": iconRotate
   },
-  paint: {}
+  paint: {
+  }
 }
 
-export const POINT_SYMBOL_LEFT_LAYER: LayerSpecification = {
-  id: `${POINT_ICON_LAYER_NAME}-${DIRECTION.LEFT}`,
-  type: "symbol",
-  filter: [...filter, ["==", "anchor", "left"]],
-  source: POINT_SOURCE_NAME,
-  layout: {
-    "icon-allow-overlap": iconAllowOverlap,
-    "icon-anchor": "left",
-    "icon-image": iconImage,
-    "icon-size": iconSize
-  },
-  paint: {}
-}
+export const POINT_ICON_LAYERS: Array<SymbolLayerSpecification> = [POINT_SYMBOL_CENTER_LAYER];
 
-export const POINT_SYMBOL_RIGHT_LAYER: LayerSpecification = {
-  id: `${POINT_ICON_LAYER_NAME}-${DIRECTION.RIGHT}`,
-  type: "symbol",
-  filter: [...filter, ["==", "anchor", "right"]],
-  source: POINT_SOURCE_NAME,
-  layout: {
-    "icon-allow-overlap": iconAllowOverlap,
-    "icon-anchor": "right",
-    "icon-image": iconImage,
-    "icon-size": iconSize
-  },
-  paint: {}
-}
-
-export const POINT_SYMBOL_TOP_LAYER: LayerSpecification = {
-  id: `${POINT_ICON_LAYER_NAME}-${DIRECTION.TOP}`,
-  type: "symbol",
-  filter: [...filter, ["==", "anchor", "top"]],
-  source: POINT_SOURCE_NAME,
-  layout: {
-    "icon-allow-overlap": iconAllowOverlap,
-    "icon-anchor": "top",
-    "icon-image": iconImage,
-    "icon-size": iconSize
-  },
-  paint: {}
-}
-
-export const POINT_SYMBOL_BOTTOM_LAYER: LayerSpecification = {
-  id: `${POINT_ICON_LAYER_NAME}-${DIRECTION.BOTTOM}`,
-  type: "symbol",
-  filter: [...filter, ["==", "anchor", "bottom"]],
-  source: POINT_SOURCE_NAME,
-  layout: {
-    "icon-allow-overlap": iconAllowOverlap,
-    "icon-anchor": "bottom",
-    "icon-image": iconImage,
-    "icon-size": iconSize
-  },
-  paint: {}
-}
-
-export const POINT_SYMBOL_TOP_LEFT_LAYER: LayerSpecification = {
-  id: `${POINT_ICON_LAYER_NAME}-${DIRECTION.TOP_LEFT}`,
-  type: "symbol",
-  filter: [...filter, ["==", "anchor", "top-left"]],
-  source: POINT_SOURCE_NAME,
-  layout: {
-    "icon-allow-overlap": iconAllowOverlap,
-    "icon-anchor": "top-left",
-    "icon-image": iconImage,
-    "icon-size": iconSize
-  },
-  paint: {}
-}
-
-export const POINT_SYMBOL_TOP_RIGHT_LAYER: LayerSpecification = {
-  id: `${POINT_ICON_LAYER_NAME}-${DIRECTION.TOP_RIGHT}`,
-  type: "symbol",
-  filter: [...filter, ["==", "anchor", "top-right"]],
-  source: POINT_SOURCE_NAME,
-  layout: {
-    "icon-allow-overlap": iconAllowOverlap,
-    "icon-anchor": "top-right",
-    "icon-image": iconImage,
-    "icon-size": iconSize
-  },
-  paint: {}
-}
-
-export const POINT_SYMBOL_BOTTOM_LEFT_LAYER: LayerSpecification = {
-  id: `${POINT_ICON_LAYER_NAME}-${DIRECTION.BOTTOM_LEFT}`,
-  type: "symbol",
-  filter: [...filter, ["==", "anchor", "bottom-left"]],
-  source: POINT_SOURCE_NAME,
-  layout: {
-    "icon-allow-overlap": iconAllowOverlap,
-    "icon-anchor": "bottom-left",
-    "icon-image": iconImage,
-    "icon-size": iconSize
-  },
-  paint: {}
-}
-
-export const POINT_SYMBOL_BOTTOM_RIGHT_LAYER: LayerSpecification = {
-  id: `${POINT_ICON_LAYER_NAME}-${DIRECTION.BOTTOM_RIGHT}`,
-  type: "symbol",
-  filter: [...filter, ["==", "anchor", "bottom-right"]],
-  source: POINT_SOURCE_NAME,
-  layout: {
-    "icon-allow-overlap": iconAllowOverlap,
-    "icon-anchor": "bottom-right",
-    "icon-image": iconImage,
-    "icon-size": iconSize
-  },
-  paint: {}
-}
-
-export const POINT_INDEX_LAYER: LayerSpecification = {
+export const POINT_INDEX_LAYER: CircleLayerSpecification = {
   id: POINT_INDEX_LAYER_NAME,
   type: "circle",
   source: POINT_SOURCE_NAME,
@@ -240,10 +143,11 @@ export const POINT_INDEX_LAYER: LayerSpecification = {
     "circle-stroke-width": ['case', ['has', 'strokeWidth'], ['get', 'strokeWidth'], 2],
     "circle-stroke-color": ['case', ['has', 'strokeColor'], ['get', 'strokeColor'], "#4093ff"],
   },
-  layout: {},
+  layout: {
+  },
 }
 
-export const POINT_INDEX_TEXT_LAYER: LayerSpecification = {
+export const POINT_INDEX_TEXT_LAYER: SymbolLayerSpecification = {
   id: POINT_INDEX_TEXT_LAYER_NAME,
   type: 'symbol',
   source: POINT_SOURCE_NAME,
@@ -259,6 +163,14 @@ export const POINT_INDEX_TEXT_LAYER: LayerSpecification = {
     'text-allow-overlap': true
   },
 };
+
+export const POINT_INDEX_LAYERS: Array<LayerSpecification> = [ POINT_INDEX_LAYER, POINT_INDEX_TEXT_LAYER ];
+
+export const POINT_LAYERS: Array<LayerSpecification> = [
+  ...POINT_CIRCLE_LAYERS,
+  ...POINT_ICON_LAYERS,
+  ...POINT_CIRCLE_LAYERS
+];
 
 /** ------------------------------------------------ 线类变量 --------------------------------------------------------**/
 

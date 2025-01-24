@@ -1,42 +1,12 @@
 import { LngLatBoundsLike, LngLatLike, Map, MapMouseEvent } from "mapbox-gl";
-import { point, featureCollection, envelope } from "@turf/turf";
+import { point } from "@turf/turf";
 import Plot from './Plot.ts'
 import { v4 as uuidV4 } from 'uuid';
 import { Feature, GeoJsonProperties } from "geojson";
-import {
-  COLD,
-  HOT,
-  POINT_LAYER,
-  POINT_SOURCE_NAME,
-  POINT_LAYER_NAME,
-  POINT_ICON_LAYER_NAME,
-  POINT_INDEX_LAYER_NAME,
-  POINT_INDEX_LAYER,
-  POINT_INDEX_TEXT_LAYER,
-  EVENTS,
-  POINT_SYMBOL_CENTER_LAYER,
-  // POINT_SYMBOL_LEFT_LAYER,
-  // POINT_SYMBOL_RIGHT_LAYER,
-  // POINT_SYMBOL_TOP_LAYER,
-  // POINT_SYMBOL_BOTTOM_LAYER,
-  // POINT_SYMBOL_TOP_LEFT_LAYER,
-  // POINT_SYMBOL_TOP_RIGHT_LAYER,
-  // POINT_SYMBOL_BOTTOM_LEFT_LAYER,
-  // POINT_SYMBOL_BOTTOM_RIGHT_LAYER,
-  CREATE_CURSOR,
-  CLICK_CURSOR,
-  MOVE_CURSOR,
-  HOVER_END_EMIT,
-  CLICK_EMIT,
-  HOVER_EMIT,
-  NO_MOUSE_RESPONSE_CURSOR,
-  DEFAULT_CIRCLE_RADIUS,
-  DEFAULT_CIRCLE_STROKE_WIDTH,
-  FOCUS_PADDING,
-} from "./vars.ts";
-import { plotEvent } from "types/module/Draw/plot.ts";
+import * as VARS from "./vars.ts";
+import { plotEvent, PlotEventKey } from "types/module/Draw/plot.ts";
 import { PointOptions, pointType } from 'types/module/Draw/Point.ts'
-import { focus } from "lib/utils/util.ts";
+import { getPointScope, focus, unFocus } from "lib/utils/util.ts";
 
 
 class Point extends Plot {
@@ -52,11 +22,23 @@ class Point extends Plot {
   properties: GeoJsonProperties;
 
   _event: plotEvent = {
+    focus: {
+      zoomend: () => {
+        if (this.checkId) {
+          const { bbox, width } = this.focusParams;
+          focus(this._map, {
+            id: this.checkId,
+            bbox,
+            width
+          })
+        }
+      },
+    },
     create: {
       click: (e: MapMouseEvent) => {
         this.coordinates = [e.lngLat.lng, e.lngLat.lat];
         this.refresh();
-        this.setCursor(CLICK_CURSOR);
+        this.setCursor(VARS.CLICK_CURSOR);
 
         this._createFunc(false);
         this._residentFunc(true);
@@ -66,25 +48,25 @@ class Point extends Plot {
       mousedown: (e: MapMouseEvent) => {
         e.preventDefault();
         if (this.isSelfUnderMouse(e)) {
-          this.setCursor(MOVE_CURSOR);
+          this.setCursor(VARS.MOVE_CURSOR);
 
           this._map.on('mousemove', this._event.update.mousemove!)
           this._map.once('mouseup', this._event.update.mouseup!)
         }
       },
       mousemove: (e: MapMouseEvent) => {
-        this.setCursor(MOVE_CURSOR);
+        this.setCursor(VARS.MOVE_CURSOR);
 
         this.update([e.lngLat.lng, e.lngLat.lat])
       },
       mouseup: (e: MapMouseEvent) => {
-        this.setCursor(CLICK_CURSOR);
+        this.setCursor(VARS.CLICK_CURSOR);
 
         this._map.off('mousemove', this._event.update.mousemove!)
 
         const features = this._map.queryRenderedFeatures(e.point, {
           target: {
-            layerId: this.layer[COLD]
+            layerId: this.layer
           }
         });
         if (!features.some(item => this.isSelf(item))) {
@@ -94,34 +76,35 @@ class Point extends Plot {
     },
     resident: {
       mouseenter: (e: MapMouseEvent) => {
-        if (NO_MOUSE_RESPONSE_CURSOR.includes(this.getCursor())) return;
+        if (VARS.NO_MOUSE_RESPONSE_CURSOR.includes(this.getCursor())) return;
 
         if (this.isSelfUnderMouse(e)) {
           this.hover(this.feature);
           this.refresh();
-          this.emit(HOVER_EMIT, this.feature)
+          this.emit(VARS.HOVER_EMIT, this.feature)
 
           this._updateFunc(true)
         }
       },
       mouseleave: () => {
-        if (NO_MOUSE_RESPONSE_CURSOR.includes(this.getCursor())) return;
+        if (VARS.NO_MOUSE_RESPONSE_CURSOR.includes(this.getCursor())) return;
 
         if (this.hoverFeature) {
           this.unHover();
           this.refresh();
-          this.emit(HOVER_END_EMIT, this.feature)
+          this.emit(VARS.HOVER_END_EMIT, this.feature)
 
           this._updateFunc(false)
         }
       },
       click: (e: MapMouseEvent) => {
-        if (NO_MOUSE_RESPONSE_CURSOR.includes(this.getCursor())) return;
+        if (VARS.NO_MOUSE_RESPONSE_CURSOR.includes(this.getCursor())) return;
 
         if (e.features?.length) {
           const feature = e.features[0]
           if (this.isSelf(feature)) {
-            this.emit(CLICK_EMIT, feature);
+            this.select();
+            this.emit(VARS.CLICK_EMIT, feature);
           }
         }
       },
@@ -129,20 +112,7 @@ class Point extends Plot {
   }
 
   constructor(map: Map, options: PointOptions) {
-    super(map, POINT_SOURCE_NAME, [
-      POINT_LAYER,
-      POINT_INDEX_LAYER,
-      POINT_INDEX_TEXT_LAYER,
-      POINT_SYMBOL_CENTER_LAYER,
-      // POINT_SYMBOL_LEFT_LAYER,
-      // POINT_SYMBOL_RIGHT_LAYER,
-      // POINT_SYMBOL_TOP_LAYER,
-      // POINT_SYMBOL_BOTTOM_LAYER,
-      // POINT_SYMBOL_TOP_LEFT_LAYER,
-      // POINT_SYMBOL_TOP_RIGHT_LAYER,
-      // POINT_SYMBOL_BOTTOM_LEFT_LAYER,
-      // POINT_SYMBOL_BOTTOM_RIGHT_LAYER
-    ]);
+    super(map, VARS.POINT_SOURCE_NAME, VARS.POINT_LAYERS);
     this._options = options;
     this.id = this._options.id || uuidV4();
     this.properties = this._options.properties || {};
@@ -183,6 +153,7 @@ class Point extends Plot {
       hover: this.isHover,
       source: this.source,
       ...this.isHover ? this.activeStyle : {},
+      ...this.isCheck ? this.activeStyle : {},
     }
 
     switch (this.meta) {
@@ -223,47 +194,64 @@ class Point extends Plot {
     const anchor = this._options.iconStyle?.anchor || 'center';
 
     const metaMap = {
-      'circle': {
-        [HOT]: `${POINT_LAYER_NAME}-${HOT}`,
-        [COLD]: `${POINT_LAYER_NAME}-${COLD}`,
-      },
-      'icon': {
-        [HOT]: `${POINT_ICON_LAYER_NAME}-${anchor}-${HOT}`,
-        [COLD]: `${POINT_ICON_LAYER_NAME}-${anchor}-${COLD}`
-      },
-      'index': {
-        [HOT]: `${POINT_INDEX_LAYER_NAME}-${HOT}`,
-        [COLD]: `${POINT_INDEX_LAYER_NAME}-${COLD}`,
-      },
+      'circle': VARS.POINT_CIRCLE_LAYER_NAME,
+      'icon': `${VARS.POINT_ICON_LAYER_NAME}-${anchor}`,
+      'index': VARS.POINT_INDEX_LAYER_NAME,
     }
 
     return metaMap[this.meta];
   }
 
   get focusParams() {
-    // if (this.meta === 'circle') {
-      const {x, y} = this._map.project(this.coordinates)
-      const { circleRadius, strokeWidth } = this.style
-      const width = (circleRadius || DEFAULT_CIRCLE_RADIUS) + ( strokeWidth || DEFAULT_CIRCLE_STROKE_WIDTH ) * 2 + FOCUS_PADDING * 2;
-      const { bbox } = envelope(featureCollection([
-        point(this._map.unproject([x - width / 2, y - width / 2]).toArray()),
-        point(this._map.unproject([x + width / 2, y + width / 2]).toArray())
-      ]))
+    const {x, y} = this._map.project(this.coordinates)
+    let bbox: LngLatBoundsLike = [0, 0, 0, 0];
+    let width: number = 20;
 
-      return { bbox, width }
-    // }
+    if (this.meta === 'circle') {
+      const radius = this._options.circleStyle?.circleRadius || VARS.DEFAULT_CIRCLE_RADIUS;
+      const stroke_width = this._options.circleStyle?.strokeWidth || VARS.DEFAULT_CIRCLE_STROKE_WIDTH;
+
+      width = radius + stroke_width * 2 + VARS.FOCUS_PADDING * 2;
+      bbox = getPointScope(this._map, x, y, width)
+
+    } else if (this.meta === 'index') {
+      const radius = this._options.indexStyle?.circleRadius || VARS.DEFAULT_CIRCLE_RADIUS;
+      const stroke_width = this._options.indexStyle?.strokeWidth || VARS.DEFAULT_CIRCLE_STROKE_WIDTH;
+
+      width = radius + stroke_width * 2 + VARS.FOCUS_PADDING * 2;
+      bbox = getPointScope(this._map, x, y, width)
+    } else if (this.meta === 'icon') {
+      const size: number = this._options.iconStyle?.iconSize || VARS.defaultIconSize;
+
+      // todo 获取实际图片大小后续改为
+      width = 48 * size + VARS.FOCUS_PADDING * 2;
+      bbox = getPointScope(this._map, x, y, width)
+    } else {
+      throw new Error(`Unknown feature type ${this.meta}`);
+    }
+
+    return { bbox, width }
   }
 
   start() {
     this._residentFunc(false);
     this._createFunc(true);
-    this.setCursor(CREATE_CURSOR);
+    this.setCursor(VARS.CREATE_CURSOR);
   }
 
   update(value: [number, number]) {
     this.move(value);
-    this.emit('update', this.feature)
-    this._map.fire(EVENTS.POINT_UPDATE, this.feature);
+    this.emit('update', this.feature);
+    this._map.fire(VARS.EVENTS.POINT_UPDATE, this.feature);
+
+    if (this.checkId) {
+      const { bbox, width } = this.focusParams;
+      focus(this._map, {
+        id: this.checkId,
+        bbox,
+        width
+      })
+    }
   }
 
   remove() {
@@ -277,7 +265,7 @@ class Point extends Plot {
 
     this.refresh();
     this.emit('move', this.feature)
-    this._map.fire(EVENTS.POINT_MOVE, this.feature);
+    this._map.fire(VARS.EVENTS.POINT_MOVE, this.feature);
   }
 
   position(): void {
@@ -289,49 +277,69 @@ class Point extends Plot {
   }
 
   select() {
+    this.focus();
+    this.position();
     this.refresh();
   }
 
   unSelect() {
+    this.unFocus();
     this.refresh();
   }
 
   focus() {
-    this.check()
-    const id = focus(this._map, {
-      bbox: this.focusParams.bbox as LngLatBoundsLike,
-      width: this.focusParams.width
-    })
+    const { bbox, width } = this.focusParams;
+    const id = focus(this._map, { bbox, width});
+    this.check(id);
+    this.refresh();
 
-    this._map.on('zoomend', () => {
-      focus(this._map, {
-        id,
-        bbox: this.focusParams.bbox as LngLatBoundsLike,
-        width: this.focusParams.width
-      })
-    })
+    this._focusFunc(true);
   }
 
   unFocus() {
-    this.unCheck()
+    unFocus(this._map, this.checkId)
+    this.unCheck();
+    this.refresh();
+
+    this._focusFunc(false);
   }
 
   refresh() {
     this._render(this.feature)
   }
 
-  _createFunc(value: boolean) {
+  _createFunc(value: boolean, key?: PlotEventKey) {
+    if (key) {
+      console.log('开启key');
+      return;
+    }
     this._map[value ? 'on' : 'off']('click', this._event.create.click!)
   }
 
-  _updateFunc(value: boolean) {
-    this._map[value ? 'on' : 'off']('mousedown', this.layer[HOT], this._event.update.mousedown!)
+  _updateFunc(value: boolean, key?: PlotEventKey) {
+    if (key) {
+      console.log('开启key');
+      return;
+    }
+    this._map[value ? 'on' : 'off']('mousedown', this.layer, this._event.update.mousedown!)
   }
 
-  _residentFunc(value: boolean) {
-    this._map[value ? 'on' : 'off']('mouseenter', this.layer[COLD], this._event.resident.mouseenter!)
-    this._map[value ? 'on' : 'off']('mouseleave', this.layer[COLD], this._event.resident.mouseleave!)
-    this._map[value ? 'on' : 'off']('click', this.layer[COLD], this._event.resident.click!)
+  _residentFunc(value: boolean, key?: PlotEventKey) {
+    if (key) {
+      console.log('开启key');
+      return;
+    }
+    this._map[value ? 'on' : 'off']('mouseenter', this.layer, this._event.resident.mouseenter!)
+    this._map[value ? 'on' : 'off']('mouseleave', this.layer, this._event.resident.mouseleave!)
+    this._map[value ? 'on' : 'off']('click', this.layer, this._event.resident.click!)
+  }
+
+  _focusFunc(value: boolean, key?: PlotEventKey) {
+    if (key) {
+      console.log('开启key');
+      return;
+    }
+    this._map[value ? 'on' : 'off']('zoomend', this._event.focus.zoomend!)
   }
 }
 

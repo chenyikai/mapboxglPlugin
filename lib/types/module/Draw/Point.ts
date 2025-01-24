@@ -18,6 +18,7 @@ export interface PointOptions {
     icon: string;
     iconSize?: number;
     anchor?: DataDrivenPropertyValueSpecification<"center" | "left" | "right" | "top" | "bottom" | "top-left" | "top-right" | "bottom-left" | "bottom-right">;
+    iconRotate?: number;
   };
   indexStyle?: {
     textSize?: number,

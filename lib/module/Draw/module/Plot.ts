@@ -3,19 +3,19 @@ import { GeoJSONSource, LayerSpecification, Map, MapMouseEvent } from "mapbox-gl
 import { Feature, Position, GeoJsonProperties } from "geojson";
 import { addSource, addLayer } from "lib/utils/util.ts";
 import { plotEvent } from 'types/module/Draw/plot.ts'
-import { COLD, FOCUS_LAYER, FOCUS_LAYER_NAME, FOCUS_SOURCE_NAME, HOT } from "lib/module/Draw/module/vars.ts";
+import { COLD, HOT } from "lib/module/Draw/module/vars.ts";
 
 abstract class Plot extends EventEmitter {
   _map: Map;
   isVisible: boolean = true;
 
-  isCheck: boolean = true;
+  isCheck: boolean = false;
+  checkId: string = "";
 
   isHover: boolean = false;
   hoverFeature: Feature | null = null;
 
-  source: string = COLD;
-  sourceName: string;
+  source: string;
 
   lastCursor: string = "";
 
@@ -27,9 +27,9 @@ abstract class Plot extends EventEmitter {
   protected constructor(map: Map, source: string, layers: Array<LayerSpecification> | LayerSpecification) {
     super();
     this._map = map;
-    this.sourceName = source;
+    this.source = source;
 
-    addSource(this._map, this.sourceName, {
+    addSource(this._map, this.source, {
       type: 'geojson',
       dynamic: true,
       data: {
@@ -39,12 +39,12 @@ abstract class Plot extends EventEmitter {
     })
 
     if (Array.isArray(layers)) {
-      layers.forEach(layer => addLayer(this._map, layer));
+      layers.forEach(layer => {
+        addLayer(this._map, layer);
+      });
     } else {
       addLayer(this._map, layers);
     }
-
-    this._initFocus();
   }
 
   /**
@@ -102,12 +102,14 @@ abstract class Plot extends EventEmitter {
 
   abstract _residentFunc(value: boolean): void;
 
-  check(): void {
+  check(id: string): void {
     this.isCheck = true;
+    this.checkId = id;
   }
 
   unCheck(): void {
     this.isCheck = false;
+    this.checkId = "";
   };
 
   hover(feature: Feature): void {
@@ -115,7 +117,7 @@ abstract class Plot extends EventEmitter {
     this.lastCursor = this._map.getContainer().style.cursor;
     this.isHover = true;
     this.setCursor('pointer');
-    this.hot();
+    // this.hot();
   }
 
   unHover() {
@@ -123,7 +125,7 @@ abstract class Plot extends EventEmitter {
     this.isHover = false;
     this.setCursor(this.lastCursor);
     this.lastCursor = '';
-    this.cold();
+    // this.cold();
   }
 
   visible() {
@@ -146,7 +148,7 @@ abstract class Plot extends EventEmitter {
    * 渲染
    */
   _render(features: Array<Feature> | Feature, target?: string) {
-    const source: GeoJSONSource | undefined = this._map.getSource(target || this.sourceName);
+    const source: GeoJSONSource | undefined = this._map.getSource(target || this.source);
     if (source) {
       source.updateData({
         type: "FeatureCollection",
@@ -176,23 +178,6 @@ abstract class Plot extends EventEmitter {
     }
 
     return false;
-  }
-
-  _initFocus() {
-    if (!this._map.getSource(FOCUS_SOURCE_NAME)) {
-      this._map.addSource(FOCUS_SOURCE_NAME, {
-        type: 'geojson',
-        dynamic: true,
-        data: {
-          type: 'FeatureCollection',
-          features: []
-        }
-      })
-    }
-
-    if(!this._map.getLayer(FOCUS_LAYER_NAME)) {
-      this._map.addLayer(FOCUS_LAYER)
-    }
   }
 }
 

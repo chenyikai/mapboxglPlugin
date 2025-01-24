@@ -4,15 +4,15 @@ import {
   SourceSpecification,
   Map,
   LngLatBoundsLike,
-  GeoJSONSource
+  GeoJSONSource,
 } from "mapbox-gl";
-import { EventKey } from "types/module/Draw/plot.ts";
+// import { PlotEventKey } from "types/module/Draw/plot.ts";
 import { v4 as uuidV4 } from 'uuid';
-import { lineString, point, rhumbDestination } from "@turf/turf";
+import { envelope, featureCollection, multiLineString, point, rhumbDestination } from "@turf/turf";
 import { set } from 'lodash-es';
-import { FOCUS_SOURCE_NAME } from "lib/module/Draw/module/vars.ts";
+import { FOCUS_LAYER, FOCUS_SOURCE_NAME } from "lib/module/Draw/module/vars.ts";
 
-const _listeners: any = {};
+// const _listeners: any = {};
 const focusData: any = {}
 
 export function distanceToPx(map: Map, val: number) {
@@ -54,8 +54,9 @@ export function addSource(map: Map, id: string, source: SourceSpecification) {
 }
 
 export function addLayer(map: Map, layer: LayerSpecification, beforeId?: string) {
-  addColdLayer(map, layer, beforeId);
-  addHotLayer(map, layer, beforeId);
+  if(!map.getLayer(layer.id)) {
+    map.addLayer(layer, beforeId)
+  }
 }
 
 export function addColdLayer(map: Map, layer: LayerSpecification, beforeId?: string) {
@@ -77,83 +78,105 @@ export function addHotLayer(map: Map, layer: LayerSpecification, beforeId?: stri
 }
 
 
-export function banListener(map: Map, keys: EventKey | Array<EventKey>) {
-  if (Array.isArray(keys)) {
-    keys.forEach(key => {
-      _listeners[key] = map._listeners[key];
-      map._listeners[key] = [];
-    })
-  } else {
-    _listeners[keys] = map._listeners[keys];
-    map._listeners[keys] = [];
-  }
-}
+// export function banListener(map: Map, keys: PlotEventKey | Array<PlotEventKey>) {
+//   if (Array.isArray(keys)) {
+//     keys.forEach(key => {
+//       _listeners[key] = map._listeners[key];
+//       map._listeners[key] = [];
+//     })
+//   } else {
+//     _listeners[keys] = map._listeners[keys];
+//     map._listeners[keys] = [];
+//   }
+// }
+//
+// export function unBanListener(map: Map, keys: PlotEventKey | Array<PlotEventKey>) {
+//   if (Array.isArray(keys)) {
+//     keys.forEach(key => {
+//       map._listeners[key] = _listeners[key];
+//       _listeners[key] = [];
+//     })
+//   } else {
+//     map._listeners[keys] = _listeners[keys];
+//     _listeners[keys] = [];
+//   }
+// }
 
-export function unBanListener(map: Map, keys: EventKey | Array<EventKey>) {
-  if (Array.isArray(keys)) {
-    keys.forEach(key => {
-      map._listeners[key] = _listeners[key];
-      _listeners[key] = [];
-    })
-  } else {
-    map._listeners[keys] = _listeners[keys];
-    _listeners[keys] = [];
-  }
+export function initFocus(map: Map) {
+  addSource(map, FOCUS_SOURCE_NAME, {
+    type: 'geojson',
+    dynamic: true,
+    data: {
+      type: 'FeatureCollection',
+      features: []
+    }
+  })
+
+  addLayer(map, FOCUS_LAYER)
 }
 
 export function focus(map: Map, { id, bbox, width }: { id?: string, bbox: LngLatBoundsLike, width: number }) {
+  initFocus(map);
+
   const focusId = id || uuidV4();
   set(focusData, focusId, { id: focusId, bbox, width })
-  // @ts-ignore
+
   const [ minLon, minLat, maxLon, maxLat ] = focusData[focusId].bbox;
 
-  const one = point([minLon, maxLat]);
-  const two = point([maxLon, maxLat]);
-  const three = point([maxLon, minLat]);
-  const four = point([minLon, minLat]);
+  const LEFT_TOP = point([minLon, maxLat]);
+  const RIGHT_TOP = point([maxLon, maxLat]);
+  const RIGHT_BOTTOM = point([maxLon, minLat]);
+  const LEFT_BOTTOM = point([minLon, minLat]);
   const meter = focusData[focusId].width / distanceToPx(map, 1) * 0.3
-
-  const oneCorner = lineString([
-    rhumbDestination(one, meter, 90, { units: "meters" }).geometry.coordinates,
-    one.geometry.coordinates,
-    rhumbDestination(one, meter, 180, { units: "meters" }).geometry.coordinates,
-  ], {}, {
-    id: focusId + 'one-corner'
-  })
-
-  const twoCorner = lineString([
-    rhumbDestination(two, meter, 270, { units: "meters" }).geometry.coordinates,
-    two.geometry.coordinates,
-    rhumbDestination(two, meter, 180, { units: "meters" }).geometry.coordinates,
-  ], {}, {
-    id: focusId + 'two-corner'
-  })
-
-  const threeCorner = lineString([
-    rhumbDestination(three, meter, 0, { units: "meters" }).geometry.coordinates,
-    three.geometry.coordinates,
-    rhumbDestination(three, meter, 270, { units: "meters" }).geometry.coordinates,
-  ], {}, {
-    id: focusId + 'three-corner'
-  })
-
-  const fourCorner = lineString([
-    rhumbDestination(four, meter, 0, { units: "meters" }).geometry.coordinates,
-    four.geometry.coordinates,
-    rhumbDestination(four, meter, 90, { units: "meters" }).geometry.coordinates,
-  ], {}, {
-    id: focusId + 'four-corner'
-  })
+  const border = multiLineString([
+    [
+      rhumbDestination(LEFT_BOTTOM, meter, 0, { units: "meters" }).geometry.coordinates,
+      LEFT_BOTTOM.geometry.coordinates,
+      rhumbDestination(LEFT_BOTTOM, meter, 90, { units: "meters" }).geometry.coordinates,
+    ],
+    [
+      rhumbDestination(LEFT_TOP, meter, 90, { units: "meters" }).geometry.coordinates,
+      LEFT_TOP.geometry.coordinates,
+      rhumbDestination(LEFT_TOP, meter, 180, { units: "meters" }).geometry.coordinates,
+    ],
+    [
+      rhumbDestination(RIGHT_TOP, meter, 180, { units: "meters" }).geometry.coordinates,
+      RIGHT_TOP.geometry.coordinates,
+      rhumbDestination(RIGHT_TOP, meter, 270, { units: "meters" }).geometry.coordinates,
+    ],
+    [
+      rhumbDestination(RIGHT_BOTTOM, meter, 270, { units: "meters" }).geometry.coordinates,
+      RIGHT_BOTTOM.geometry.coordinates,
+      rhumbDestination(RIGHT_BOTTOM, meter, 0, { units: "meters" }).geometry.coordinates,
+    ],
+  ], { id: focusId }, { id: focusId })
 
   const source: GeoJSONSource | undefined = map.getSource(FOCUS_SOURCE_NAME)
   if (source) {
     source.updateData({
       type: 'FeatureCollection',
-      features: [oneCorner, twoCorner, threeCorner, fourCorner],
+      features: [border],
     })
   }
 
   return focusId;
 }
 
-export function unFocus() {}
+export function unFocus(map: Map, id: string) {
+  const source: GeoJSONSource | undefined = map.getSource(FOCUS_SOURCE_NAME)
+  if (source) {
+    delete focusData[id];
+
+    source.updateData({
+      type: 'FeatureCollection',
+      features: [point([0, 0], {}, { id })]
+    })
+  }
+}
+
+export function getPointScope(map: Map, x: number, y: number, width: number): LngLatBoundsLike {
+  return envelope(featureCollection([
+    point(map.unproject([x - width / 2, y - width / 2]).toArray()),
+    point(map.unproject([x + width / 2, y + width / 2]).toArray())
+  ])).bbox as LngLatBoundsLike;
+}
