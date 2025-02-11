@@ -82,11 +82,20 @@ mapbox.on('loaded', (map) => {
   //   name: 1
   // })
 
-  const circlePoint = new Point(map, {
+  new Point(map, {
     type: 'circle',
     coordinates: [122.106863, 30.016028],
   });
 
+  // new Point(map, {
+  //   type: 'circle',
+  //   coordinates: [122.106863, 30.016028],
+  // });
+
+  // new Point(map, {
+  //   type: 'circle',
+  //   immediate: true,
+  // })
 
   // new Point(map, {
   //   type: 'index',
@@ -94,15 +103,16 @@ mapbox.on('loaded', (map) => {
   //   coordinates: [2, 2],
   // })
 
-  new Point(map, {
-    type: "icon",
-    coordinates: [122.106863, 30.016028],
-    iconStyle: {
-      icon: 'fire',
-      anchor: 'center',
-      iconSize: 0.7
-    }
-  })
+  // new Point(map, {
+  //   type: "icon",
+  //   coordinates: [122.106863, 30.016028],
+  //   iconStyle: {
+  //     icon: 'fire',
+  //     anchor: 'center',
+  //     iconSize: 0.7,
+  //     iconRotate: 90
+  //   }
+  // })
 
 
 

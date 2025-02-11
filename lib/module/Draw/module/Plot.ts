@@ -114,7 +114,7 @@ abstract class Plot extends EventEmitter {
 
   hover(feature: Feature): void {
     this.hoverFeature = feature;
-    this.lastCursor = this._map.getContainer().style.cursor;
+    // this.lastCursor = this._map.getContainer().style.cursor;
     this.isHover = true;
     this.setCursor('pointer');
     // this.hot();
@@ -123,8 +123,8 @@ abstract class Plot extends EventEmitter {
   unHover() {
     this.hoverFeature = null;
     this.isHover = false;
-    this.setCursor(this.lastCursor);
-    this.lastCursor = '';
+    this.setCursor('grab');
+    // this.lastCursor = '';
     // this.cold();
   }
 
