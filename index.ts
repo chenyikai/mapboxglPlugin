@@ -3,8 +3,8 @@ import Mapbox from 'lib/module/Map'
 import Layer from 'lib/module/Layer/index'
 
 import ShipManage from 'lib/module/ShipManage/index'
-import Ship from './lib/module/ShipManage/shipTypes/ship'
-import NormalShip from './lib/module/ShipManage/shipTypes/normalShip'
+import BaseShip from './lib/module/Ship/plugins/BaseShip'
+import AisShip from './lib/module/Ship/plugins/AisShip'
 
 import Collision from "lib/core/Collision";
 import CollisionItem from './lib/core/Collision/CollisionItem'
@@ -26,8 +26,8 @@ export {
   Mapbox,
   Layer,
   ShipManage,
-  Ship,
-  NormalShip,
+  BaseShip,
+  AisShip,
   Collision,
   CollisionItem as CollisionItem,
   Icon,

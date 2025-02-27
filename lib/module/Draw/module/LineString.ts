@@ -1,61 +1,56 @@
-import Plot from './Plot.ts'
-import Point from './Point.ts'
+import Plot from "lib/module/Draw/module/Plot.ts";
+import { Map, MapMouseEvent } from 'mapbox-gl';
+import Point from 'lib/module/Draw/module/Point.ts';
+import { plotEvent, PlotEventKey } from "types/module/Draw/Plot.ts";
 import { Feature, GeoJsonProperties, Position } from "geojson";
-import { Map, MapMouseEvent } from "mapbox-gl";
-import { v4 as uuidV4 } from "uuid";
-import { lineString } from '@turf/turf'
-import { EVENTS, LINE_STRING_LAYER, LINE_STRING_SOURCE_NAME } from "lib/module/Draw/module/vars.ts";
-import { plotEvent } from "types/module/Draw/plot.ts";
+import * as VARS from './vars.ts';
+import { v4 as uuidV4 } from 'uuid';
+import { lineStringItem, LineStringOptions, lineStringType } from "types/module/Draw/LineString.ts";
+import { lineString } from "@turf/turf";
 
-interface lineStringOptions {
-  id?: string;
-  name?: string | number;
-  coordinates?: Array<Position> | Array<Point>;
-  immediate?: boolean
-  properties?: GeoJsonProperties;
-}
+class LineString extends Plot {
 
-class LineString extends Plot{
-  static EMPTY: string = '-2'
+  static EMPTY: string = '-1,-1';
 
-  coordinates: Array<Position> | Array<Point>;
+  _event: plotEvent = {
+    create: {
+      click: (e: MapMouseEvent) => {
+        const lonLat: lineStringItem = [e.lngLat.lng, e.lngLat.lat];
+        this.coordinates.push(lonLat);
+        this.refresh();
+      },
+      dblclick: () => {
+        this._createFunc(false);
+        this.refresh();
+      }
+    },
+    focus: {},
+    resident: {
+      pointMove: (e: Feature) => {
+        console.log(e, 'e');
+        this.refresh();
+      }
+    },
+    update: {
+      pointMove: () => {
+        this.refresh();
+      }
+    }
+  };
 
-  points: Array<Point> = [];
+  _options: LineStringOptions;
+
+  coordinates: Array<lineStringItem>;
 
   id: string;
 
   properties: GeoJsonProperties;
 
-  _options: lineStringOptions;
+  points: Array<Point> = [];
 
-  _event: plotEvent = {
-    create: {
-      click: () => {
-      }
-    },
-    update: {
-      mousedown: () => {
-      },
-      mousemove: () => {
-      },
-      mouseup: () => {
-      }
-    },
-    resident: {
-      mousemove: (e: MapMouseEvent) => {
-      },
-      click: (e: MapMouseEvent) => {
-      },
-      pointMove: () => {
-        // if (this.isSelf(feature)) {
-          this._render(this.feature);
-        // }
-      }
-    }
-  }
+  constructor(map: Map, options: LineStringOptions) {
+    super(map, VARS.LINE_STRING_SOURCE_NAME, VARS.LINE_STRING_LAYERS);
 
-  constructor(map: Map, options: lineStringOptions) {
-    super(map, LINE_STRING_SOURCE_NAME, LINE_STRING_LAYER);
     this._options = options;
     this.id = this._options.id || uuidV4();
     this.properties = this._options.properties || {};
@@ -64,68 +59,124 @@ class LineString extends Plot{
     if (this.coordinates.toString() === LineString.EMPTY) {
       this._options.immediate && this.start();
     } else {
-      this.points = this.coordinates.map((coordinate: Position | Point, index: number) => {
-        if (coordinate instanceof Point) {
-          return coordinate
-        } else {
-          return new Point(this._map, {
-            type: 'index',
-            coordinates: coordinate,
-            name: index + 1,
-            properties: {
-              belong: this.id
-            }
-          })
-        }
-      })
+      this.points = this.coordinates.map((coordinate, index) => new Point(this._map, {
+        type: 'index',
+        name: index + 1,
+        coordinates: coordinate,
+      }))
 
-      this._render(this.feature);
-      this._residentFunc(true)
+      this.refresh();
+      this._residentFunc(true);
     }
   }
 
-  get feature() {
-    return lineString(this.points.map(point => point.coordinates), { ...this.properties, id: this.id }, {
+  get meta(): lineStringType {
+    return this._options.type
+  }
+
+  get activeStyle(): GeoJsonProperties {
+    const styleMap = {
+      'circle': {
+        strokeColor: '#f00',
+      },
+      'arrow': {},
+      'index': {
+        strokeColor: '#f00',
+        textColor: '#f00'
+      },
+    }
+
+    return styleMap[this.meta];
+  }
+
+  get style() {
+    let props: GeoJsonProperties = {
+      name: this._options.name,
+      meta: this.meta,
+      hover: this.isHover,
+      source: this.source,
+      ...this.isHover ? this.activeStyle : {},
+      ...this.isCheck ? this.activeStyle : {},
+    }
+
+    switch (this.meta) {
+      case "circle":
+        props = {
+          ...props,
+        }
+        break;
+      case "arrow":
+        props = {
+          ...props,
+        }
+        break;
+      case "index":
+        props = {
+          ...props,
+        }
+        break;
+      default:
+        throw new Error(`Unknown feature type ${this.meta}`);
+    }
+
+    return { ...this.properties, ...props }
+  }
+
+  get feature(): Feature {
+    return lineString(this.points.map(point => point.coordinates), { ...this.style, id: this.id }, {
       id: this.id,
-    });
+    })
   }
 
-  get layer(): string {
-    return ''
+  _createFunc(value: boolean, key?: PlotEventKey) {
+    if (key) {
+      console.log('开启key');
+      return;
+    }
+    this._map[value ? 'on' : 'off']('click', this._event.create.click!)
+    this._map[value ? 'on' : 'off']('dblclick', this._event.create.dblclick!)
   }
 
-  start() {}
+  _residentFunc(value: boolean, key?: PlotEventKey) {
+    if (key) {
+      console.log('开启key');
+      return;
+    }
+    this._map[value ? 'on' : 'off'](VARS.EVENTS.POINT_MOVE, this._event.update.pointMove!)
+  }
+
+  _updateFunc() {}
 
   focus(): void {
   }
 
   move(value: Position): void {
-    console.log(value, 'vale');
   }
 
   position(): void {
   }
 
+  refresh(): void {
+    this._render(this.feature)
+  }
+
+  remove(): void {
+  }
+
   select(): void {
   }
 
-  unselect(): void {
+  start(): void {
   }
 
-  _createFunc(value: boolean) {
-    // this._map[value ? 'on' : 'off']('click', this._event.create.click!)
+  unFocus(): void {
   }
 
-  _updateFunc(value: boolean) {
-    // this._map[value ? 'on' : 'off']('mousedown', this.layer, this._event.update.mousedown!)
+  unSelect(): void {
   }
 
-  _residentFunc(value: boolean) {
-    // this._map[value ? 'on' : 'off']('mouseenter', this.layer, this._event.resident.mouseenter!)
-    this._map[value ? 'on' : 'off']('mousemove', this._event.resident.mousemove!)
-    this._map[value ? 'on' : 'off']('click', this._event.resident.click!)
-    this._map[value ? 'on' : 'off'](EVENTS.POINT_MOVE, this._event.resident.pointMove!)
+  update(value: Position): void {
   }
 }
 
-export default LineString
+export default LineString;

@@ -49,7 +49,6 @@ export const landStyle: StyleSpecification = {
       id: 'base-end',
       type: 'background',
       paint: {
-        // 'background-color': '#000',
         'background-color': 'transparent',
       },
     },
@@ -57,7 +56,13 @@ export const landStyle: StyleSpecification = {
       id: Layer.DIVIDER,
       type: 'background',
       paint: {
-        // 'background-color': '#000',
+        'background-color': 'transparent',
+      },
+    },
+    {
+      id: 'point-end',
+      type: 'background',
+      paint: {
         'background-color': 'transparent',
       },
     },

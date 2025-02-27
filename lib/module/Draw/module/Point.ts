@@ -4,7 +4,7 @@ import Plot from './Plot.ts'
 import { v4 as uuidV4 } from 'uuid';
 import { Feature, GeoJsonProperties } from "geojson";
 import * as VARS from "./vars.ts";
-import { plotEvent, PlotEventKey } from "types/module/Draw/plot.ts";
+import { plotEvent, PlotEventKey, PointCoordinates } from "types/module/Draw/Plot.ts";
 import { PointOptions, pointType } from 'types/module/Draw/Point.ts'
 import { getPointScope, focus, unFocus } from "lib/utils/util.ts";
 
@@ -13,9 +13,11 @@ class Point extends Plot {
 
   static EMPTY: string = '-1,-1'
 
+  static EMD: string = 'point-end'
+
   _options: PointOptions;
 
-  coordinates: [number, number];
+  coordinates: PointCoordinates;
 
   id: string;
 
@@ -106,6 +108,16 @@ class Point extends Plot {
             this.select();
             this.emit(VARS.CLICK_EMIT, feature);
           }
+        }
+      },
+      zoomend: () => {
+        if (this.checkId) {
+          const { bbox, width } = this.focusParams;
+          focus(this._map, {
+            id: this.checkId,
+            bbox,
+            width
+          })
         }
       },
     }
@@ -292,16 +304,12 @@ class Point extends Plot {
     const id = focus(this._map, { bbox, width});
     this.check(id);
     this.refresh();
-
-    this._focusFunc(true);
   }
 
   unFocus() {
     unFocus(this._map, this.checkId)
     this.unCheck();
     this.refresh();
-
-    this._focusFunc(false);
   }
 
   refresh() {
@@ -332,14 +340,7 @@ class Point extends Plot {
     this._map[value ? 'on' : 'off']('mouseenter', this.layer, this._event.resident.mouseenter!)
     this._map[value ? 'on' : 'off']('mouseleave', this.layer, this._event.resident.mouseleave!)
     this._map[value ? 'on' : 'off']('click', this.layer, this._event.resident.click!)
-  }
-
-  _focusFunc(value: boolean, key?: PlotEventKey) {
-    if (key) {
-      console.log('开启key');
-      return;
-    }
-    this._map[value ? 'on' : 'off']('zoomend', this._event.focus.zoomend!)
+    this._map[value ? 'on' : 'off']('zoomend', this.layer, this._event.resident.zoomend!)
   }
 }
 

@@ -14,5 +14,7 @@ export type plotEvent = {
   }>
 };
 
+export type PointCoordinates = [number, number];
+
 
 // export type Focus

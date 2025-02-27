@@ -2,12 +2,14 @@ import EventEmitter from 'eventemitter3'
 import { GeoJSONSource, LayerSpecification, Map, MapMouseEvent } from "mapbox-gl";
 import { Feature, Position, GeoJsonProperties } from "geojson";
 import { addSource, addLayer } from "lib/utils/util.ts";
-import { plotEvent } from 'types/module/Draw/plot.ts'
+import { plotEvent } from 'types/module/Draw/Plot.ts'
 import { COLD, HOT } from "lib/module/Draw/module/vars.ts";
 
 abstract class Plot extends EventEmitter {
   _map: Map;
   isVisible: boolean = true;
+
+  disabled: boolean = false;
 
   isCheck: boolean = false;
   checkId: string = "";
@@ -134,6 +136,14 @@ abstract class Plot extends EventEmitter {
 
   unVisible() {
     this.isVisible = false;
+  }
+
+  edit() {
+    this.disabled = true;
+  }
+
+  unEdit() {
+    this.disabled = false;
   }
 
   hot() {

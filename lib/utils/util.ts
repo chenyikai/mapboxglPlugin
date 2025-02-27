@@ -6,7 +6,7 @@ import {
   LngLatBoundsLike,
   GeoJSONSource,
 } from "mapbox-gl";
-// import { PlotEventKey } from "types/module/Draw/plot.ts";
+// import { PlotEventKey } from "types/module/Draw/Plot.ts";
 import { v4 as uuidV4 } from 'uuid';
 import { envelope, featureCollection, multiLineString, point, rhumbDestination } from "@turf/turf";
 import { set } from 'lodash-es';
@@ -115,10 +115,12 @@ export function initFocus(map: Map) {
   addLayer(map, FOCUS_LAYER)
 }
 
+
 export function focus(map: Map, { id, bbox, width }: { id?: string, bbox: LngLatBoundsLike, width: number }) {
   initFocus(map);
 
   const focusId = id || uuidV4();
+
   set(focusData, focusId, { id: focusId, bbox, width })
 
   const [ minLon, minLat, maxLon, maxLat ] = focusData[focusId].bbox;

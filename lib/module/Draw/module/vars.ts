@@ -4,13 +4,15 @@ import {
   LayerSpecification,
   SymbolLayerSpecification
 } from "mapbox-gl";
-import { PlotEvent } from 'types/module/Draw/plot.ts';
+import { PlotEvent } from 'types/module/Draw/Plot.ts';
 
 /** ------------------------------------------------ 公用变量 --------------------------------------------------------**/
 
 export const COLD: string = 'cold';
 
 export const HOT: string = 'hot';
+
+export const DIVIDER: string = 'plot-end';
 
 export const DIRECTION = {
   CENTER: 'center',
@@ -22,6 +24,20 @@ export const DIRECTION = {
   TOP_RIGHT: 'top-right',
   BOTTOM_LEFT: 'bottom-left',
   BOTTOM_RIGHT: 'bottom-right',
+}
+
+export const CURSOR = {
+  CREATE: 'crosshair',
+  CLICK: 'pointer',
+  MOVE: 'move',
+}
+
+export const EVENTS = {
+  POINT_MOVE: 'point.move',
+  POINT_UPDATE: 'point.update',
+  MOUSE_ENTER: 'mouseenter',
+  MOUSE_LEAVE: 'mouseleave',
+  CLICK: 'click'
 }
 
 // create的cursor
@@ -38,7 +54,7 @@ export const HOVER_END_EMIT: PlotEvent = 'hoverend';
 export const CLICK_EMIT: PlotEvent = 'click';
 
 // 不响应鼠标事件cursor
-export const NO_MOUSE_RESPONSE_CURSOR: Array<string> = [CREATE_CURSOR]
+export const NO_MOUSE_RESPONSE_CURSOR: Array<string> = [CURSOR.CREATE]
 
 /** ------------------------------------------------ 聚焦图层 --------------------------------------------------------**/
 
@@ -169,7 +185,7 @@ export const POINT_INDEX_LAYERS: Array<LayerSpecification> = [ POINT_INDEX_LAYER
 export const POINT_LAYERS: Array<LayerSpecification> = [
   ...POINT_CIRCLE_LAYERS,
   ...POINT_ICON_LAYERS,
-  ...POINT_CIRCLE_LAYERS
+  ...POINT_INDEX_LAYERS
 ];
 
 /** ------------------------------------------------ 线类变量 --------------------------------------------------------**/
@@ -190,7 +206,8 @@ export const LINE_STRING_LAYER: LayerSpecification = {
   layout: {},
 }
 
-export const EVENTS = {
-  POINT_MOVE: 'point.move',
-  POINT_UPDATE: 'point.update'
-}
+export const LINE_STRING_LAYERS: Array<LayerSpecification> = [
+  LINE_STRING_LAYER
+]
+
+/** ------------------------------------------------ 通用变量 --------------------------------------------------------**/
