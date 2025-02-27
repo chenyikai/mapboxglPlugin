@@ -1,3 +1,36 @@
+export const aimData = {
+      "mmsi": "413282870",
+      "hdg": 57,
+      "cog": 60.9,
+      "rot": 0,
+      "updateTime": "1735292731000",
+      "sog": 0,
+      "location": "30.002180,122.091280",
+      "enname": "KAI QIANG FENG SHEN",
+      "cnname": "凯强风神",
+      "typeId": 70,
+      "length": 95,
+      "width": 20,
+      "statusId": 1,
+      "status": "锚泊",
+      "draft": 2.3,
+      "imo": "147462",
+      "callsign": "BOQJ9",
+      "toBow": 10,
+      "toStern": 85,
+      "toStarboard": 5,
+      "toPort": 15,
+      "cstype": null,
+      "builtDate": null,
+      "dwt": null,
+      "cstatus": 1,
+      "ctype2": 0,
+      "nationalityCode": "CN",
+      "source": 0,
+      "bdts": "1735162076000",
+      "shipSource": 1
+    }
+
 export const shipData = [
   {
     "mmsi": "413584910",

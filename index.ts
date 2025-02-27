@@ -2,7 +2,6 @@ import Plugin from "lib";
 import Mapbox from 'lib/module/Map'
 import Layer from 'lib/module/Layer/index'
 
-import ShipManage from 'lib/module/ShipManage/index'
 import BaseShip from './lib/module/Ship/plugins/BaseShip'
 import AisShip from './lib/module/Ship/plugins/AisShip'
 
@@ -25,7 +24,6 @@ export {
   Plugin,
   Mapbox,
   Layer,
-  ShipManage,
   BaseShip,
   AisShip,
   Collision,

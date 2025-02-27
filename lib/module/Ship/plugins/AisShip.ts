@@ -3,12 +3,19 @@ import { Map, Point } from "mapbox-gl";
 import { AisShipOptions } from 'types/module/Ship/plugins/AisShip.ts'
 import { ShipIcon, ShipShape, ShipDirection } from "types/module/Ship/plugins/BaseShip.ts";
 import { Feature, Position } from "geojson";
-import { distanceToPx } from "lib/utils/util.ts";
+import { addLayer, addSource, distanceToPx } from "lib/utils/util.ts";
 import { lineString, lineToPolygon, point, transformRotate } from "@turf/turf";
+import { SHIP_REAL_LAYER, SHIP_REAL_LAYER_NAME } from "lib/module/Ship/vars.ts";
 
 class AisShip extends BaseShip{
   constructor(map: Map, options: AisShipOptions) {
     super(map, options);
+
+    this.init()
+
+    setTimeout(() => {
+      this._render(this.feature)
+    }, 1000)
   }
 
   get direction(): ShipDirection {
@@ -26,6 +33,16 @@ class AisShip extends BaseShip{
   }
 
   init(): void {
+    addSource(this._map, AisShip.SOURCE, {
+      type: 'geojson',
+      // dynamic: true,
+      data: {
+        type: 'FeatureCollection',
+        features: []
+      }
+    })
+
+    addLayer(this._map, SHIP_REAL_LAYER)
   }
 
   real(): Feature {
@@ -41,17 +58,21 @@ class AisShip extends BaseShip{
       this.shape.leftStern,
       this.shape.leftQuarter,
       this.shape.leftBow,
+      this.shape.head,
     ]
 
-    if (this.direction === "left" || this.direction === "right") {
-      points = [ this.shape.direction!, this.shape.turn!, ...points, this.shape.turn!, this.shape.direction!,]
-    } else if (this.direction === 'straight') {
-      points = [this.shape.turn!, ...points, this.shape.turn!]
-    }
+    // if (this.direction === "left" || this.direction === "right") {
+    //   points = [ this.shape.direction!, this.shape.turn!, ...points, this.shape.turn!, this.shape.direction!,]
+    // } else if (this.direction === 'straight') {
+    //   points = [this.shape.turn!, ...points, this.shape.turn!]
+    // }
 
-    const ship = lineToPolygon(lineString(points.map(item => this._map.unproject(item).toArray())))
+    const line = lineString(points.map(item => this._map.unproject(item).toArray()))
+    const ship = lineToPolygon(line)
+    console.log(ship, 'ship');
     return {
-      ...transformRotate(ship, this._options.dir),
+      // ...transformRotate(ship, this._options.dir),
+      ...ship,
       id: this._options.id,
       properties: this._options
     };
