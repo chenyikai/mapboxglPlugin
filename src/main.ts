@@ -14,7 +14,6 @@ import { aimData, shipData, shipList, allData } from "./shipData";
 import { Map, LngLat } from "mapbox-gl";
 // @ts-ignore
 import '../styles/index.scss'
-import RBush from 'rbush'
 import Icon from "../lib/core/Icon";
 
 const mapbox = new Mapbox({
@@ -207,17 +206,18 @@ mapbox.on('loaded', (map) => {
 
   // 这俩个可以切换 一个加载一艘船 一个加载所有 ==
 
-  // const ship = addShip(map, aimData)
   new Icon(map).add({
     name: 'ais',
     url: new URL('lib/module/Ship/plugins/images/AisShip/ship.png', import.meta.url).href
   })
 
+  const ship = addShip(map, aimData)
 
-  const ship = new Ship(map, {
-    data: addShips(map),
-    plugins: [AisShip]
-  })
+
+  // const ship = new Ship(map, {
+  //   data: addShips(map),
+  //   plugins: [AisShip]
+  // })
 
   // for(const id in ship._collision.result) {
   //   const item = ship._collision.result[id];
@@ -242,6 +242,10 @@ function addShip(map: Map, item: any) {
     time: item.updateTime,
     type: item.typeId,
     width: item.width,
+    top: item.toBow,
+    bottom: item.toStern,
+    right: item.toStarboard,
+    left: item.toPort,
     icon: {
       name: 'ais',
       url: new URL('lib/module/Ship/plugins/images/AisShip/ship.png', import.meta.url).href

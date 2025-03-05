@@ -14,6 +14,10 @@ export interface BaseShipOptions {
   type: string | null,
   status: string,
   time: string,
+  top?: number | null,
+  left?: number | null,
+  right?: number | null,
+  bottom?: number | null,
   icon: icon
 }
 

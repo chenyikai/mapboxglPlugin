@@ -9,8 +9,6 @@ import Ship from './lib/module/Ship/index'
 import Collision from "lib/core/Collision";
 import CollisionItem from './lib/core/Collision/CollisionItem'
 import Icon from 'lib/core/Icon'
-import Label from './lib/core/Label'
-import LabelItem from './lib/core/Label/LabelItem'
 import Tooltip from './lib/core/Tooltip'
 
 import Point from "./lib/module/Draw/module/Point";
@@ -30,10 +28,8 @@ export {
   AisShip,
   Ship,
   Collision,
-  CollisionItem as CollisionItem,
+  CollisionItem,
   Icon,
-  Label,
-  LabelItem,
   Tooltip,
   Point,
   LineString,

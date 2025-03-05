@@ -2,7 +2,7 @@ import EventEmitter from "eventemitter3";
 import { Map, GeoJSONSource, LngLat } from "mapbox-gl";
 import { BaseShipOptions, ShipDirection, ShipShape } from "types/module/Ship/plugins/BaseShip.ts";
 import { Feature, Point } from "geojson";
-import Cache from 'lib/core/Cache/index.ts'
+import Tooltip from 'lib/core/Tooltip/index.ts'
 import { SHIP_SOURCE_NAME } from "lib/module/Ship/vars.ts";
 
 abstract class BaseShip extends EventEmitter {
@@ -16,13 +16,25 @@ abstract class BaseShip extends EventEmitter {
 
   _map: Map;
   _options: BaseShipOptions;
-  cache: Cache = new Cache({ uniqueKey: 'ship', type: 'localstorage' });
+  tooltip: Tooltip;
 
   protected constructor(map: Map, options: BaseShipOptions) {
     super();
+    const offsetX = 5
+    const offsetY = 25
 
     this._map = map;
     this._options = options;
+
+    this.tooltip = new Tooltip(this._map, {
+      id: this._options.id,
+      className: 'mapbox-gl-ship-name-tooltip',
+      position: this._options.position,
+      offsetX,
+      offsetY,
+      element: this.shipName(),
+      anchor: 'bottom-right'
+    })
   }
 
   abstract get id(): BaseShipOptions['id'];
@@ -40,6 +52,8 @@ abstract class BaseShip extends EventEmitter {
    */
   abstract init(): void;
 
+  abstract remove(): void;
+
   /**
    * icon形态
    */
@@ -51,6 +65,8 @@ abstract class BaseShip extends EventEmitter {
   abstract real(): Feature;
 
   abstract render(): void;
+
+  abstract shipName(): HTMLElement;
 
   /**
    * 渲染

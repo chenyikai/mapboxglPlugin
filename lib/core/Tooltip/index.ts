@@ -4,7 +4,7 @@ import { BBox } from 'rbush'
 import { addLayer, addSource } from "lib/utils/util.ts";
 import { CONNECT_LINE_LAYER, TOOLTIP_SOURCE_NAME } from "lib/core/Tooltip/vars.ts";
 import { lineString } from "@turf/turf";
-import { Feature } from "geojson";
+import { Feature, GeoJSON, GeoJsonProperties, LineString } from "geojson";
 
 class Tooltip {
 
@@ -169,7 +169,7 @@ class Tooltip {
     return this
   }
 
-  connectLine() {
+  connectLine(): Feature<null, GeoJsonProperties> | Feature<LineString, GeoJsonProperties> {
     const id = `${this._options.id}-tooltip-connect-line`
     const lonLat = this.connectPoint() ? [
       this._options.position.toArray(),
@@ -216,10 +216,7 @@ class Tooltip {
   render() {
     this.mark && this.mark.addTo(this._map)
 
-    this._map.getSource<GeoJSONSource>(TOOLTIP_SOURCE_NAME)?.updateData({
-      type: 'FeatureCollection',
-      features: [ this.connectLine() ]
-    })
+    this._map.getSource<GeoJSONSource>(TOOLTIP_SOURCE_NAME)?.updateData(<GeoJSON>this.connectLine())
     return this
   }
 }

@@ -32,10 +32,6 @@ class Ship extends EventEmitter {
     })
 
     this.collisionLabel()
-
-    this._map.on('zoomend', () => {
-      this.collisionLabel()
-    })
   }
 
   collisionLabel() {

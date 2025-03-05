@@ -2,7 +2,6 @@ import BaseShip from "lib/module/Ship/plugins/BaseShip.ts";
 import { LngLat, Map, Point } from "mapbox-gl";
 import { AisShipOptions } from 'types/module/Ship/plugins/AisShip.ts'
 import { ShipShape, ShipDirection } from "types/module/Ship/plugins/BaseShip.ts";
-import { Feature, Polygon, LineString } from "geojson";
 import { addLayer, addSource, distanceToPx } from "lib/utils/util.ts";
 import { lineString, lineToPolygon, point, transformRotate } from "@turf/turf";
 import {
@@ -10,30 +9,20 @@ import {
   SHIP_REAL_LAYER,
   SHIP_REAL_OUTLINE_LAYER,
 } from "lib/module/Ship/vars.ts";
-import * as geojson from 'geojson'
-import Tooltip from "lib/core/Tooltip";
+import * as GeoJSON from 'geojson'
+import { isNull } from "lib/utils/validate";
+import { BBox } from "rbush";
 
 class AisShip extends BaseShip{
-  tooltip: Tooltip
+
+  zoomFunc = this._zoom.bind(this)
 
   constructor(map: Map, options: AisShipOptions) {
     super(map, options);
     this.init()
 
-    this.tooltip = new Tooltip(this._map, {
-      id: this._options.id,
-      className: 'mapbox-gl-ship-name-tooltip',
-      position: this._options.position,
-      offsetX: 5,
-      offsetY: 25,
-      element: this.shipName(),
-      anchor: 'bottom-right'
-    })
-
     this.render()
-    this._map.on('zoomend', () => {
-      this.render()
-    })
+    this._map.on('zoom', this.zoomFunc)
   }
 
   get id(): AisShipOptions['id'] {
@@ -48,7 +37,7 @@ class AisShip extends BaseShip{
     return 'left';
   }
 
-  get feature(): Array<Feature> {
+  get feature(): Array<GeoJSON.Feature> {
     if (this._map.getZoom() >= 16) {
       return [this.real()]
     } else {
@@ -56,8 +45,8 @@ class AisShip extends BaseShip{
     }
   }
 
-  icon(): Feature<geojson.Point> {
-    return point(this._options.position.toArray(), {
+  icon(): GeoJSON.Feature<GeoJSON.Point> {
+    return point(this.position.toArray(), {
       ...this._options,
       icon: this._options.icon.name,
       dir: this._options.dir,
@@ -86,6 +75,10 @@ class AisShip extends BaseShip{
     })
   }
 
+  remove() {
+    this._map.off('zoom', this.zoomFunc)
+  }
+
   shipName(): HTMLElement {
     const id = `${this._options.id}-ship-name-box`
     let shipNameBox = document.getElementById(id)
@@ -106,7 +99,7 @@ class AisShip extends BaseShip{
     return shipNameBox
   }
 
-  real(): Feature<Polygon> | Feature<geojson.Point> {
+  real(): GeoJSON.Feature<GeoJSON.Polygon> | GeoJSON.Feature<GeoJSON.Point> {
     if (this.shape === null) {
       return this.icon()
     }
@@ -128,10 +121,10 @@ class AisShip extends BaseShip{
       points = [this.shape.turn!, ...points, this.shape.turn!]
     }
 
-    const line: Feature<LineString> = lineString(points.map(item => this._map.unproject(item).toArray()))
-    let ship: Feature<Polygon> = lineToPolygon(line) as Feature<Polygon>;
-    ship = transformRotate<Feature<Polygon>>(ship, this._options.dir, {
-      pivot: this._options.position.toArray(),
+    const line: GeoJSON.Feature<GeoJSON.LineString> = lineString(points.map(item => this._map.unproject(item).toArray()))
+    let ship: GeoJSON.Feature<GeoJSON.Polygon> = lineToPolygon(line) as GeoJSON.Feature<GeoJSON.Polygon>;
+    ship = transformRotate<GeoJSON.Feature<GeoJSON.Polygon>>(ship, this._options.dir, {
+      pivot: this.position.toArray(),
     })
     ship.id = this._options.id
     ship.properties = {
@@ -142,8 +135,29 @@ class AisShip extends BaseShip{
   }
 
   get shape(): ShipShape | null {
+    const offset = new Point(0, 0);
+
+    if (
+        !isNull(this._options.top) &&
+        !isNull(this._options.bottom) &&
+        !isNull(this._options.left) &&
+        !isNull(this._options.right)
+    ) {
+      const bbox: BBox = {
+        minX: -this._options.left!,
+        minY: -this._options.top!,
+        maxX: this._options.right!,
+        maxY: this._options.bottom!,
+      }
+
+      offset.x = (bbox.minX + bbox.maxX) / 2
+      offset.y = (bbox.maxY + bbox.minY) / 2
+    }
+
     if (this._options.width && this._options.height) {
-      const { x, y }: Point = this._map.project(this._options.position)
+      const orientation: Point = this._map.project(this.position)
+      const x = orientation.x + offset.x;
+      const y = orientation.y + offset.y;
       const expandX: number =  distanceToPx(this._map, this._options.width) / 2
       const expandY: number = distanceToPx(this._map, this._options.height) / 2
 
@@ -168,6 +182,10 @@ class AisShip extends BaseShip{
   render() {
     this.tooltip.render()
     this._render(this.feature)
+  }
+
+  _zoom() {
+    this.render()
   }
 
   getShipCourseDirection(shipInfo: any) {
