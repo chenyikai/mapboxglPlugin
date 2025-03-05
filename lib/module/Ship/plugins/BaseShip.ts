@@ -1,7 +1,8 @@
 import EventEmitter from "eventemitter3";
-import { Map, GeoJSONSource } from "mapbox-gl";
-import { BaseShipOptions, ShipDirection, ShipIcon, ShipShape } from "types/module/Ship/plugins/BaseShip.ts";
-import { Feature } from "geojson";
+import { Map, GeoJSONSource, LngLat } from "mapbox-gl";
+import { BaseShipOptions, ShipDirection, ShipShape } from "types/module/Ship/plugins/BaseShip.ts";
+import { Feature, Point } from "geojson";
+import Cache from 'lib/core/Cache/index.ts'
 import { SHIP_SOURCE_NAME } from "lib/module/Ship/vars.ts";
 
 abstract class BaseShip extends EventEmitter {
@@ -15,12 +16,18 @@ abstract class BaseShip extends EventEmitter {
 
   _map: Map;
   _options: BaseShipOptions;
+  cache: Cache = new Cache({ uniqueKey: 'ship', type: 'localstorage' });
 
   protected constructor(map: Map, options: BaseShipOptions) {
     super();
+
     this._map = map;
     this._options = options;
   }
+
+  abstract get id(): BaseShipOptions['id'];
+
+  abstract get position(): LngLat;
 
   abstract get direction(): ShipDirection;
 
@@ -36,29 +43,38 @@ abstract class BaseShip extends EventEmitter {
   /**
    * icon形态
    */
-  abstract icon(): ShipIcon;
+  abstract icon(): Feature<Point>;
 
   /**
    * 真实形态
    */
   abstract real(): Feature;
 
+  abstract render(): void;
+
   /**
    * 渲染
    */
   _render(features: Array<Feature> | Feature, target?: string) {
-    const source: GeoJSONSource | undefined = this._map.getSource(target || BaseShip.SOURCE);
-    source?.setData({
-      type: "FeatureCollection",
-      features: Array.isArray(features) ? features : [features]
-    })
-    // if (source) {
-    //   source.updateData({
-    //     type: "FeatureCollection",
-    //     features: Array.isArray(features) ? features : [features]
-    //   })
-    //   this.emit('render', features)
+    // const list = this.cache.get('shipList') || []
+    // if (Array.isArray(features)) {
+    //   this.cache.set({ name: 'shipList', content: [ ...list, ...features ] });
+    // } else {
+    //   this.cache.set({ name: 'shipList', content: [ ...list, features ] });
     // }
+
+    const source: GeoJSONSource | undefined = this._map.getSource(target || BaseShip.SOURCE);
+    // source?.setData({
+    //   type: "FeatureCollection",
+    //   features: this.cache.get('shipList')
+    // })
+    if (source) {
+      source.updateData({
+        type: "FeatureCollection",
+        features: Array.isArray(features) ? features : [features]
+      })
+      this.emit('render', features)
+    }
   }
 }
 

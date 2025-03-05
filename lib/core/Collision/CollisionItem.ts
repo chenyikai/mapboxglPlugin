@@ -1,48 +1,8 @@
-import { bboxPolygon } from '@turf/turf'
-import { v4 as uuidV4 } from 'uuid';
-import { Point } from 'mapbox-gl'
-import { BBox as GeoJSONBBox, Feature, Polygon, GeoJsonProperties } from "geojson";
-import { BBox, Id, Directions, Scopes, ItemOptions } from 'types/core/Collision/item'
+import { Scopes, CollisionItemOptions } from 'types/core/Collision/item'
+import { BBox } from 'rbush'
+import { Anchor } from "types/core/Toolip";
 
 class CollisionItem {
-
-  visible: boolean = true
-
-  _position: Point = new Point(0, 0);
-
-  _expand: { x: number, y: number } = { x: 0, y: 0 };
-
-  _width: number = 0;
-
-  _height: number = 0;
-
-  _bbox: BBox = [-1, -1, -1, -1];
-
-  _dir: Directions | undefined;
-
-  _options: ItemOptions["options"] | undefined;
-
-  _id: Id;
-
-  // 上
-  // static TOP: Directions = Directions.TOP;
-  // 右
-  // static RIGHT: Directions = Directions.RIGHT;
-  // 下
-  // static BOTTOM: Directions = Directions.BOTTOM;
-  // 左
-  // static LEFT: Directions = Directions.LEFT;
-  // 左上
-  static TOP_LEFT: Directions = Directions.TOP_LEFT;
-  // 右上
-  static TOP_RIGHT: Directions = Directions.TOP_RIGHT;
-  // 右下
-  static BOTTOM_RIGHT: Directions = Directions.BOTTOM_RIGHT;
-  // 左下
-  static BOTTOM_LEFT: Directions = Directions.BOTTOM_LEFT;
-  // 中
-  // static CENTER: Directions = Directions.CENTER;
-
   // 最小X
   static MIN_X: Scopes = Scopes.MIN_X;
   // 最小Y
@@ -52,98 +12,56 @@ class CollisionItem {
   // 最大Y
   static MAX_Y: Scopes = Scopes.MAX_Y;
 
+  id: CollisionItemOptions['id'];
+
+  visible: boolean = true
+
+  dir: Anchor = 'top-left'
+
+  dirs: Array<Anchor> = [
+    'top-left',
+    'top-right',
+    'bottom-left',
+    'bottom-right',
+    // 'center',
+    'top',
+    'bottom',
+    'left',
+    'right',
+  ]
+
+  _options: CollisionItemOptions
+
   /**
    *
-   * @param config
+   * @param options
    */
-  constructor(config: ItemOptions) {
-    this._init(config)
-  }
-
-  _init({ position, width, height, dir = Directions.BOTTOM_RIGHT, expand = { x: 0, y: 0 }, options }: ItemOptions) {
-    this._position = position
-    this._width = width
-    this._height = height
-    if (expand) {
-      this._expand = expand
-    }
-    this._dir = dir;
+  constructor(options: CollisionItemOptions) {
+    this.id = options.id;
     this._options = options;
-    this._id = this._options?.id || uuidV4()
-
-    this.setBBox()
   }
 
   get minX(): number {
-    return this._bbox[CollisionItem.MIN_X]
+    return this._options[this.dir].minX
   }
 
   get minY(): number {
-    return this._bbox[CollisionItem.MIN_Y]
+    return this._options[this.dir].minY
   }
 
   get maxX(): number {
-    return this._bbox[CollisionItem.MAX_X]
+    return this._options[this.dir].maxX
   }
 
   get maxY(): number {
-    return this._bbox[CollisionItem.MAX_Y]
-  }
-
-  setBBox() {
-    let maxX: number;
-    let maxY: number;
-    let minX: number;
-    let minY: number;
-    if (this._dir === CollisionItem.BOTTOM_RIGHT) {
-      maxX = this._position.x
-      minY = this._position.y
-
-      minX = maxX - ( this._width + this._expand.x )
-      maxY = minY + this._height + this._expand.y
-    } else if (this._dir === CollisionItem.BOTTOM_LEFT) {
-      minX = this._position.x
-      minY = this._position.y
-
-      maxX = minX + this._width + this._expand.x
-      maxY = minY + this._height + this._expand.y
-    } else if (this._dir === CollisionItem.TOP_LEFT) {
-      minX = this._position.x
-      maxY = this._position.y
-
-      maxX = minX + this._width + this._expand.x
-      minY = maxY - ( this._height + this._expand.y )
-    } else if (this._dir === CollisionItem.TOP_RIGHT) {
-      maxX = this._position.x
-      maxY = this._position.y
-
-      minX = maxX - ( this._width + this._expand.x )
-      minY = maxY - ( this._height + this._expand.y )
-    } else {
-      throw new Error(`Unsupported dir: ${this._dir}`);
-    }
-
-    this._bbox = [minX, minY, maxX, maxY]
-  }
-
-  getId(): Id {
-    return this._id;
+    return this._options[this.dir].maxY
   }
 
   /**
    *
    */
   getBBox(): BBox {
-    return this._bbox;
-  }
-
-  /**
-   * 设置方向
-   * @param dirEnum 方向枚举
-   */
-  setDir(dirEnum: Directions): void {
-    this._dir = dirEnum;
-    this.setBBox()
+    return this._options[this.dir];
   }
 
   /**
@@ -154,8 +72,8 @@ class CollisionItem {
     this.visible = visible;
   }
 
-  polygon(): Feature<Polygon, GeoJsonProperties> {
-    return bboxPolygon(this._bbox as GeoJSONBBox, this._options)
+  setDir(dir: Anchor) {
+    this.dir = dir;
   }
 
   /**
@@ -164,8 +82,8 @@ class CollisionItem {
    * @return true-相交 false-不相交
    */
   isIntersect(box: BBox): boolean {
-    const [ minX, minY, maxX, maxY ] = box
-    return minX <= this.maxX || maxX >= this.minX || minY <= this.maxY || maxY >= this.minY
+    const { minX, minY, maxX, maxY } = box
+    return minX <= this.minX && minY <= this.minY && this.maxX <= maxX && this.maxY <= maxY;
   }
 }
 

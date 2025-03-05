@@ -1,7 +1,6 @@
-import { Map, LngLatLike } from "mapbox-gl";
+import { LngLat } from "mapbox-gl";
 
 export interface LabelOptions {
-  map: Map,
   id: string,
   ex?: number,
   ey?: number,
@@ -9,7 +8,7 @@ export interface LabelOptions {
 }
 
 export interface labelData {
-  position: LngLatLike,
+  position: LngLat,
   info: string,
   style?: {
     fontSize: number;

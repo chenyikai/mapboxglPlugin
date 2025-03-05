@@ -4,12 +4,14 @@ import Layer from 'lib/module/Layer/index'
 
 import BaseShip from './lib/module/Ship/plugins/BaseShip'
 import AisShip from './lib/module/Ship/plugins/AisShip'
+import Ship from './lib/module/Ship/index'
 
 import Collision from "lib/core/Collision";
 import CollisionItem from './lib/core/Collision/CollisionItem'
 import Icon from 'lib/core/Icon'
 import Label from './lib/core/Label'
 import LabelItem from './lib/core/Label/LabelItem'
+import Tooltip from './lib/core/Tooltip'
 
 import Point from "./lib/module/Draw/module/Point";
 import LineString from "./lib/module/Draw/module/LineString";
@@ -26,11 +28,13 @@ export {
   Layer,
   BaseShip,
   AisShip,
+  Ship,
   Collision,
   CollisionItem as CollisionItem,
   Icon,
   Label,
   LabelItem,
+  Tooltip,
   Point,
   LineString,
   Utils,

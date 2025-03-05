@@ -1,9 +1,9 @@
 import RBush from 'rbush'
 import CollisionItem from 'lib/core/Collision/CollisionItem.ts';
-import { set } from 'lodash-es'
-import { BBox, Directions, Id } from "types/core/Collision/item";
 import type { Map } from 'mapbox-gl'
-import type { CollisionOptions, collisionItem } from "types/core/Collision"
+import type { CollisionOptions } from "types/core/Collision"
+import { CollisionItemOptions } from "types/core/Collision/item.ts";
+// import { BBox } from "rbush";
 
 class Collision {
 
@@ -13,60 +13,54 @@ class Collision {
 
   _collisionList: Array<CollisionItem> = [];
 
-  constructor(config: CollisionOptions) {
-    this._map = config.map;
-    this._collisionList = config.collisions || [];
-    if (this._collisionList.length > 0) {
-      this._tree.load(this._collisionList);
-      this.collides()
+  constructor(map: Map, config?: CollisionOptions) {
+    this._map = map;
+    if (Array.isArray(config?.collisions)) {
+      this.load(config.collisions);
     }
   }
 
-  add(collisionItem: collisionItem): Id | null {
-    if (!this._map) return null;
+  load(collisions: Array<CollisionItemOptions>) {
+    this._tree.clear()
 
-    const position = this._map.project(collisionItem.lngLat)
-    if (!position) return null;
-
-    const item = new CollisionItem({
-      position,
-      width: collisionItem.width,
-      height: collisionItem.height,
-      expand: collisionItem.expand,
-      options: collisionItem.options
-    });
-
-    this.set(item);
-
-    return item.getId();
+    this._collisionList = collisions.map(item => new CollisionItem(item))
+    this.collides()
   }
 
-  set(item: CollisionItem): Id {
-    const index = this._collisionList.findIndex(collision => collision.getId() === item.getId())
-    if (index !== -1) {
-      set(this._collisionList, index, item);
-      this._tree.remove(item, (a, b) => a.getId() === b.getId());
-    } else {
-      this._collisionList.push(item);
-    }
-    this._tree.insert(item);
+  getItem(id: string | number) {
+    return this._collisionList.find(item => item.id === id)
+  }
 
-    return item.getId();
+  getCollisions() {
+    return this._collisionList
   }
 
   collides() {
     if (!this._map) return;
 
-    const dpr: number = window.devicePixelRatio || 1
-    const canvas_bbox: BBox = [0, 0, this._map._canvas.width / dpr, this._map._canvas.height / dpr]
+    // const dpr: number = window.devicePixelRatio || 1
+    // const canvas_bbox: BBox = {
+    //   minX: 0,
+    //   minY: 0,
+    //   maxX: this._map._canvas.width / dpr,
+    //   maxY: this._map._canvas.height / dpr,
+    // }
     for(const item of this._collisionList) {
-      for(const directionsKey in Directions) {
-        const direction: number = +Directions[directionsKey];
-        item.setDir(direction)
-        const visible: boolean = item.isIntersect(canvas_bbox) && !this._tree.collides(item)
-        item.setVisible(visible)
+      for(const dir of item.dirs) {
+        item.setDir(dir)
+
+        const isCollides = this._tree.collides(item)
+        if (isCollides) {
+          item.setVisible(false)
+        } else {
+          this._tree.insert(item)
+          item.setVisible(true)
+          break;
+        }
       }
     }
+
+    return this.getCollisions();
   }
 }
 

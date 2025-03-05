@@ -1,6 +1,7 @@
 import { LabelOptions, labelData } from 'types/core/Label'
 import { Map } from 'mapbox-gl'
 import LabelItem from 'lib/core/Label/LabelItem.ts'
+import Collision from 'lib/core/Collision/index.ts'
 
 class Label {
   _map: Map;
@@ -8,6 +9,7 @@ class Label {
   _ctx: CanvasRenderingContext2D | any;
   labels: Array<labelData> = []
   items: Array<LabelItem> = []
+  _collision: Collision;
 
   _repaint = this.repaint.bind(this)
 
@@ -16,9 +18,10 @@ class Label {
   static RIGHT_BOTTOM = 2
   static RIGHT_TOP = 3
 
-  constructor(options: LabelOptions) {
-    this._map = options.map;
+  constructor(map: Map, options: LabelOptions) {
+    this._map = map;
     this._options = options;
+    this._collision = new Collision(this._map)
 
     this._map.on('zoom', this._repaint)
     this._map.on('move', this._repaint)
@@ -44,10 +47,14 @@ class Label {
   }
 
   add(label: labelData) {
-    const labelItem = new LabelItem({ ...this._options, ...label, ctx: this._ctx, dir: LabelItem.BOTTOM_RIGHT })
+    const labelItem = new LabelItem(this._map, { ...this._options, ...label, ctx: this._ctx, dir: LabelItem.BOTTOM_RIGHT })
     labelItem.draw()
     this.labels.push(label)
     this.items.push(labelItem)
+
+    this._collision.add({
+      bbox: labelItem._bbox
+    })
     return labelItem
   }
 
@@ -74,7 +81,7 @@ class Label {
 
   _initCanvas() {
     const { width, height } = this.boxSize
-    const canvas = document.createElement('canvas');
+    const canvas: HTMLCanvasElement = <HTMLCanvasElement>document.getElementById(this._options.id) || document.createElement('canvas');
 
     canvas.id = this._options.id;
     canvas.style.position = "absolute";
@@ -92,7 +99,7 @@ class Label {
 
   _clearCanvas() {
     const { width, height } = this.boxSize
-    this._ctx.clearRect(0, 0, width, height);
+    this._ctx?.clearRect(0, 0, width, height);
   }
 }
 

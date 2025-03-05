@@ -1,5 +1,3 @@
-import { Map } from "mapbox-gl";
-
 /**
  * 初始基准点的位置
  */
@@ -16,7 +14,6 @@ export enum Directions {
 }
 
 export interface LabelItemOptions {
-  map: Map,
   id: string,
   ctx: CanvasRenderingContext2D,
   dir: Directions,

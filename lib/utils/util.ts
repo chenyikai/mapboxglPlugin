@@ -4,13 +4,15 @@ import {
   SourceSpecification,
   Map,
   LngLatBoundsLike,
-  GeoJSONSource,
+  Source,
+  GeoJSONSource
 } from "mapbox-gl";
 // import { PlotEventKey } from "types/module/Draw/Plot.ts";
 import { v4 as uuidV4 } from 'uuid';
 import { envelope, featureCollection, multiLineString, point, rhumbDestination } from "@turf/turf";
 import { set } from 'lodash-es';
 import { FOCUS_LAYER, FOCUS_SOURCE_NAME } from "lib/module/Draw/module/vars.ts";
+import { Feature } from "geojson";
 
 // const _listeners: any = {};
 const focusData: any = {}
@@ -181,4 +183,14 @@ export function getPointScope(map: Map, x: number, y: number, width: number): Ln
     point(map.unproject([x - width / 2, y - width / 2]).toArray()),
     point(map.unproject([x + width / 2, y + width / 2]).toArray())
   ])).bbox as LngLatBoundsLike;
+}
+
+export function render<T extends Source>(map: Map, target: string, features: Array<Feature>){
+  const source: T | undefined = map.getSource<T>(target);
+  if (source) {
+    source.setData({
+      type: "FeatureCollection",
+      features: features
+    })
+  }
 }

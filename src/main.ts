@@ -2,23 +2,31 @@ import {
   Mapbox,
   // Point,
   // LineString,
-  Icon,
-  Store,
+  // Icon,
+  // Store,
   // ShipManage,
   AisShip,
+  Ship,
+  Tooltip
   // Label
 } from '../index'
-import { shipData, aimData } from './shipData'
-import { Map } from "mapbox-gl";
+import { aimData, shipData, shipList, allData } from "./shipData";
+import { Map, LngLat } from "mapbox-gl";
+// @ts-ignore
+import '../styles/index.scss'
+import RBush from 'rbush'
+import Icon from "../lib/core/Icon";
 
 const mapbox = new Mapbox({
   container: "map",
   type: Mapbox.LAND,
-  center: [122.106863, 30.016028],
+  center: [122.09160659512042, 30.004767949301183],
   // center: [0, 0],
   // zoom: 5,
   zoom: 14,
 })
+
+let _ctx = null
 
 // let label = null
 
@@ -52,6 +60,21 @@ const mapbox = new Mapbox({
 
 
 mapbox.on('loaded', (map) => {
+  const dpr: number = window.devicePixelRatio || 1
+  const canvas = document.createElement('canvas');
+  canvas.id = 'tdstddas';
+  canvas.style.position = "absolute";
+  canvas.style.top = '0';
+  canvas.style.pointerEvents = 'none';
+  canvas.style.zIndex = "1000";
+  canvas.width = map._canvas.width / dpr;
+  canvas.height = map._canvas.height / dpr;
+  _ctx = canvas.getContext("2d")!;
+
+  const container = map.getContainer()
+  container.style.position = "relative";
+  container.appendChild(canvas);
+
 
   // @ts-ignore
   window.map = map
@@ -182,11 +205,30 @@ mapbox.on('loaded', (map) => {
   //
   // addLabel()
 
+  // 这俩个可以切换 一个加载一艘船 一个加载所有 ==
+
   // const ship = addShip(map, aimData)
-  addShips(map)
+  new Icon(map).add({
+    name: 'ais',
+    url: new URL('lib/module/Ship/plugins/images/AisShip/ship.png', import.meta.url).href
+  })
+
+
+  const ship = new Ship(map, {
+    data: addShips(map),
+    plugins: [AisShip]
+  })
+
+  // for(const id in ship._collision.result) {
+  //   const item = ship._collision.result[id];
+  //   if (!item.visible) {
+  //     miaobian(item.bbox)
+  //   }
+  // }
 })
 
-function addShip(map: Map, item) {
+
+function addShip(map: Map, item: any) {
   const [lat, lon] = item.location.split(',')
 
   return new AisShip(map, {
@@ -194,17 +236,84 @@ function addShip(map: Map, item) {
     height: item.length,
     id: item.mmsi,
     name: item.cnname || item.enname || item.mmsi,
-    position: [Number(lon), Number(lat)],
+    position: new LngLat(Number(lon), Number(lat)),
     speed: item.sog,
     status: item.status,
     time: item.updateTime,
     type: item.typeId,
-    width: item.width
+    width: item.width,
+    icon: {
+      name: 'ais',
+      url: new URL('lib/module/Ship/plugins/images/AisShip/ship.png', import.meta.url).href
+    }
   })
 }
 
-function addShips(map: Map) {
-  const aisShips = shipData.map(item => addShip(map, item))
+function addShips(map: Map): Array<AisShip> {
+  return allData.map(item => addShip(map, item))
+}
 
-  console.log(aisShips, 'aisShips');
+function changeAnchor(map) {
+
+  let index = 0
+  const dirs = [
+    'top-left',
+    'top-right',
+    'bottom-left',
+    'bottom-right',
+    'center',
+    'top',
+    'bottom',
+    'left',
+    'right',
+  ]
+  const aisShip = addShip(map, aimData)
+  map.on('click', () => {
+    const dir = dirs[index]
+    aisShip.tooltip.setAnchor(dir)
+    aisShip.render()
+    index++;
+  })
+}
+
+function miaobian(bbox) {
+  drawLine(_ctx, bbox)
+}
+
+function drawLine(ctx, bbox) {
+  const paths = [
+    {
+      x: bbox.minX,
+      y: bbox.minY,
+    },
+    {
+      x: bbox.maxX,
+      y: bbox.minY
+    },
+    {
+      x: bbox.maxX,
+      y: bbox.maxY
+    },
+    {
+      x: bbox.minX,
+      y: bbox.maxY
+    },
+    {
+      x: bbox.minX,
+      y: bbox.minY,
+    },
+  ]
+
+  ctx.beginPath()
+  paths.forEach((path, index) => {
+    if (index === 0) {
+      ctx.moveTo(path.x, path.y)
+    } else {
+      ctx.lineTo(path.x, path.y)
+    }
+  })
+
+  ctx.lineWidth = 2
+  ctx.strokeStyle = '#f00'
+  ctx.stroke()
 }

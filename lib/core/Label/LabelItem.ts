@@ -1,7 +1,8 @@
 import { Id, Directions, LabelItemOptions } from "types/core/Label/LabelItem.ts";
 import { labelData } from 'types/core/Label'
 import { v4 as uuidV4 } from "uuid";
-import { BBox } from 'types/core/Collision/item.ts'
+import { Map } from 'mapbox-gl'
+import { BBox } from 'rbush'
 
 class LabelItem {
 
@@ -18,10 +19,20 @@ class LabelItem {
 
   _id: Id;
 
-  _bbox: BBox = [0, 0, 0, 0]
+  _bbox: BBox = {
+    minX: 0,
+    minY: 0,
+    maxX: 0,
+    maxY: 0,
+  }
 
-  constructor(options: LabelItemOptions & labelData) {
+  _map: Map;
+
+  visible: boolean = true;
+
+  constructor(map: Map, options: LabelItemOptions & labelData) {
     this._options = options
+    this._map = map
     this._ctx = options.ctx
     this.dir = options.dir
     this._id = this._options?.id || uuidV4()
@@ -39,8 +50,12 @@ class LabelItem {
     return this._options.padding || 5
   }
 
+  get lngLat() {
+    return this._options.position
+  }
+
   get point() {
-    return this._options.map.project(this._options.position)
+    return this._map.project(this._options.position)
   }
 
   get bbox() {
@@ -132,7 +147,12 @@ class LabelItem {
     }
 
     this._ctx.strokeRect(x, y, _width, _height);
-    return [x, y, x + _width, y + _height];
+    return {
+      minX: x,
+      minY: y,
+      maxX: x + _width,
+      maxY: y + _height,
+    }
   }
 }
 

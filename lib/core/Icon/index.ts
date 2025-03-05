@@ -46,6 +46,10 @@ class Icon {
     })
   }
 
+  has(name: icon['name']): boolean {
+    return this._map.hasImage(name)
+  }
+
   update(icon: icon): Promise<result> {
     return new Promise((resolve, reject) => {
       if (!this._map.hasImage(icon.name)) {

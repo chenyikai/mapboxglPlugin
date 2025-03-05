@@ -1,21 +1,9 @@
-import { Directions, Id } from "types/core/Collision/item";
-import type { Map, LngLat } from 'mapbox-gl';
-import type { GeoJsonProperties } from "geojson";
+import { BBox } from "rbush"
+import { CollisionItemOptions } from "types/core/Collision/item.ts";
+
 export interface CollisionOptions {
-    map: Map;
-    collisions?: [];
+    collisions?: CollisionItemOptions[];
 }
 export interface collisionItem {
-    lngLat: LngLat;
-    width: number;
-    height: number;
-    dir?: Directions;
-    expand?: {
-        x: number;
-        y: number;
-    };
-    options?: {
-        id?: Id;
-        properties?: GeoJsonProperties;
-    };
+    bbox: BBox
 }
