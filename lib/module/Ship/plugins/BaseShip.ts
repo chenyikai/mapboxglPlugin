@@ -1,6 +1,6 @@
 import EventEmitter from "eventemitter3";
-import { Map, GeoJSONSource, LngLat } from "mapbox-gl";
-import { BaseShipOptions, ShipDirection, ShipShape } from "types/module/Ship/plugins/BaseShip.ts";
+import { Map, GeoJSONSource, LngLat, Point as MapboxPoint } from "mapbox-gl";
+import { BaseShipOptions, EventsControl, ShipDirection, ShipShape } from "types/module/Ship/plugins/BaseShip.ts";
 import { Feature, Point } from "geojson";
 import Tooltip from 'lib/core/Tooltip/index.ts'
 import { SHIP_SOURCE_NAME } from "lib/module/Ship/vars.ts";
@@ -16,36 +16,35 @@ abstract class BaseShip extends EventEmitter {
 
   _map: Map;
   _options: BaseShipOptions;
-  tooltip: Tooltip;
+  tooltip: Tooltip | null = null;
 
   protected constructor(map: Map, options: BaseShipOptions) {
     super();
-    const offsetX = 5
-    const offsetY = 25
-
     this._map = map;
     this._options = options;
 
-    this.tooltip = new Tooltip(this._map, {
-      id: this._options.id,
-      className: 'mapbox-gl-ship-name-tooltip',
-      position: this._options.position,
-      offsetX,
-      offsetY,
-      element: this.shipName(),
-      anchor: 'bottom-right'
-    })
+    if (this._options.immediate && this._options.tooltip) {
+      this.tooltip = new Tooltip(this._map, {
+        id: this._options.id,
+        className: 'mapbox-gl-ship-name-tooltip',
+        position: this._options.position,
+        offsetX: 5,
+        offsetY: 25,
+        element: this.shipName(),
+        anchor: 'bottom-right'
+      })
+    }
   }
 
-  abstract get id(): BaseShipOptions['id'];
+  abstract getId(): BaseShipOptions['id'];
 
-  abstract get position(): LngLat;
+  abstract getPosition(): LngLat;
 
-  abstract get direction(): ShipDirection;
+  abstract getDirection(): ShipDirection;
 
-  abstract get shape(): ShipShape | null;
+  abstract getShape(): ShipShape | null;
 
-  abstract get feature(): Array<Feature>;
+  abstract getFeature(): Array<Feature>;
 
   /**
    * 初始化资源
@@ -53,6 +52,8 @@ abstract class BaseShip extends EventEmitter {
   abstract init(): void;
 
   abstract remove(): void;
+
+  abstract setTooltip(tooltip: Tooltip): void;
 
   /**
    * icon形态
@@ -67,6 +68,10 @@ abstract class BaseShip extends EventEmitter {
   abstract render(): void;
 
   abstract shipName(): HTMLElement;
+
+  abstract offset(): MapboxPoint
+
+  abstract events(): EventsControl;
 
   /**
    * 渲染

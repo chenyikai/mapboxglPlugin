@@ -24,7 +24,8 @@ class Collision {
     this._tree.clear()
 
     this._collisionList = collisions.map(item => new CollisionItem(item))
-    this.collides()
+
+    return this.collides()
   }
 
   getItem(id: string | number) {

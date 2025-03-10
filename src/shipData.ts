@@ -73,6 +73,7 @@ export const aimData = {
       "updateTime": "1735292731000",
       "sog": 0,
       "location": "30.004767949301183,122.09160659512042",
+      // "location": "30.031175,121.998340",
       "enname": "KAI QIANG FENG SHEN",
       "cnname": "凯强风神",
       "typeId": 70,

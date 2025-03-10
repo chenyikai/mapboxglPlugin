@@ -1,5 +1,5 @@
 import { TooltipOptions } from 'types/core/Toolip/index.ts'
-import { Map, LngLatLike, Marker, Point, GeoJSONSource } from "mapbox-gl";
+import { Map, Marker, Point, GeoJSONSource, LngLat } from "mapbox-gl";
 import { BBox } from 'rbush'
 import { addLayer, addSource } from "lib/utils/util.ts";
 import { CONNECT_LINE_LAYER, TOOLTIP_SOURCE_NAME } from "lib/core/Tooltip/vars.ts";
@@ -12,11 +12,19 @@ class Tooltip {
 
   _options: TooltipOptions;
 
+  id: string | number;
+
+  visible: boolean = false;
+
   mark: Marker | null = null;
+
+  zoomFunc: () => void = this._zoom.bind(this);
 
   constructor(map: Map, options: TooltipOptions) {
     this._map = map
     this._options = options
+    this.id = options.id
+    this.visible = !!options.visible
 
     addSource(this._map, TOOLTIP_SOURCE_NAME, {
       type: 'geojson',
@@ -118,6 +126,9 @@ class Tooltip {
   remove() {
     this.mark && this.mark.remove()
     this.mark = null
+
+    this._map.off('zoom', this.zoomFunc)
+    this._map.getSource<GeoJSONSource>(TOOLTIP_SOURCE_NAME)?.updateData(<GeoJSON>this.connectLine())
   }
 
   _create() {
@@ -127,6 +138,8 @@ class Tooltip {
       offset: this._getOffsetByAnchor(),
       anchor: this._options.anchor
     }).setLngLat(this._options.position)
+
+    this._map.on('zoom', this.zoomFunc)
   }
 
   _getOffsetByAnchor() {
@@ -163,7 +176,8 @@ class Tooltip {
     return offset
   }
 
-  setLngLat(lngLat: LngLatLike) {
+  setLngLat(lngLat: LngLat) {
+    this._options.position = lngLat
     this.mark && this.mark.setLngLat(lngLat)
 
     return this
@@ -218,6 +232,12 @@ class Tooltip {
 
     this._map.getSource<GeoJSONSource>(TOOLTIP_SOURCE_NAME)?.updateData(<GeoJSON>this.connectLine())
     return this
+  }
+
+  _zoom() {
+    if (this.visible) {
+      this._map.getSource<GeoJSONSource>(TOOLTIP_SOURCE_NAME)?.updateData(<GeoJSON>this.connectLine())
+    }
   }
 }
 

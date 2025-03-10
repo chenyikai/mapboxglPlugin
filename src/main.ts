@@ -15,6 +15,7 @@ import { Map, LngLat } from "mapbox-gl";
 // @ts-ignore
 import '../styles/index.scss'
 import Icon from "../lib/core/Icon";
+import { BaseShipOptions } from "../lib/types/module/Ship/plugins/BaseShip";
 
 const mapbox = new Mapbox({
   container: "map",
@@ -211,12 +212,44 @@ mapbox.on('loaded', (map) => {
     url: new URL('lib/module/Ship/plugins/images/AisShip/ship.png', import.meta.url).href
   })
 
-  const ship = addShip(map, aimData)
+  // const ship = addShip(map, aimData)
 
 
-  // const ship = new Ship(map, {
-  //   data: addShips(map),
-  //   plugins: [AisShip]
+  const ship = new Ship(map, {
+    plugins: [AisShip]
+  })
+  const list: Array<BaseShipOptions> = [aimData].map(item => {
+    const [lat, lon] = item.location.split(',')
+
+    return {
+      dir: item.hdg || 0,
+      height: item.length,
+      id: item.mmsi,
+      name: item.cnname || item.enname || item.mmsi,
+      position: new LngLat(Number(lon), Number(lat)),
+      speed: item.sog,
+      hdg: item.hdg || 0,
+      cog: item.cog,
+      rot: item.rot,
+      statusId: item.statusId,
+      status: item.status,
+      time: item.updateTime,
+      type: AisShip.NAME,
+      width: item.width,
+      top: item.toBow,
+      bottom: item.toStern,
+      right: item.toStarboard,
+      left: item.toPort,
+      icon: "ais"
+    }
+  })
+
+  ship.load(list)
+  // ship.load(list).forEach(item => {
+  //   const box = item.tooltip?.getBbox()
+  //   if (box) {
+  //     miaobian(box)
+  //   }
   // })
 
   // for(const id in ship._collision.result) {
@@ -238,6 +271,10 @@ function addShip(map: Map, item: any) {
     name: item.cnname || item.enname || item.mmsi,
     position: new LngLat(Number(lon), Number(lat)),
     speed: item.sog,
+    hdg: item.hdg,
+    cog: item.cog,
+    rot: item.rot,
+    statusId: item.statusId,
     status: item.status,
     time: item.updateTime,
     type: item.typeId,
@@ -246,10 +283,9 @@ function addShip(map: Map, item: any) {
     bottom: item.toStern,
     right: item.toStarboard,
     left: item.toPort,
-    icon: {
-      name: 'ais',
-      url: new URL('lib/module/Ship/plugins/images/AisShip/ship.png', import.meta.url).href
-    }
+    immediate: true,
+    tooltip: true,
+    icon: "ais"
   })
 }
 

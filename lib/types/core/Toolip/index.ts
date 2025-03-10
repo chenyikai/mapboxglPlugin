@@ -4,6 +4,7 @@ export type Anchor = "center" | "top" | "bottom" | "left" | "right" | "top-left"
 
 export interface TooltipOptions {
   id: string | number;
+  visible?: boolean;
   className?: string,
   position: LngLat;
   element?: HTMLElement;
