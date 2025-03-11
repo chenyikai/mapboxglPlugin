@@ -4,7 +4,7 @@ import { BBox } from 'rbush'
 import { addLayer, addSource } from "lib/utils/util.ts";
 import { CONNECT_LINE_LAYER, TOOLTIP_SOURCE_NAME } from "lib/core/Tooltip/vars.ts";
 import { lineString } from "@turf/turf";
-import { Feature, GeoJSON, LineString } from "geojson";
+import * as GeoJSON from 'geojson'
 
 class Tooltip {
 
@@ -144,6 +144,7 @@ class Tooltip {
     this.visible = false
 
     this._map.off('zoom', this.zoomFunc)
+
     this.connectLine()
   }
 
@@ -209,16 +210,19 @@ class Tooltip {
       this.connectPoint()!.toArray()
     ] : null
 
-    const feature: Feature<null> | Feature<LineString> = lonLat === null ? {
+    const feature: GeoJSON.Feature<GeoJSON.Point> | GeoJSON.Feature<GeoJSON.LineString> = lonLat === null ? {
       id,
       type: 'Feature',
-      geometry: null,
+      geometry: {
+        type: 'Point',
+        coordinates: [0, 0]
+      },
       properties: {}
     } : lineString(lonLat, {}, {
       id
     })
 
-    this._map.getSource<GeoJSONSource>(TOOLTIP_SOURCE_NAME)?.updateData(<GeoJSON>feature)
+    this._map.getSource<GeoJSONSource>(TOOLTIP_SOURCE_NAME)?.updateData(<GeoJSON.GeoJSON>feature)
   }
 
   connectPoint() {
@@ -245,8 +249,8 @@ class Tooltip {
 
   render() {
     if (!this.mark) {
-      console.warn('尚未初始化');
-      return null
+      console.warn('tooltip尚未初始化');
+      return this
     }
 
     if (this.visible) {

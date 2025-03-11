@@ -98,10 +98,15 @@ class Ship extends EventEmitter {
   remove() {}
 
   removeAll() {
+    this._collision.clear()
+
     this.ships.forEach(ship => ship.remove())
     this.ships = []
+
     this.tooltips.forEach((tooltip) => tooltip.remove())
     this.tooltips = []
+
+    this.render()
   }
 
   install(plugin: any) {

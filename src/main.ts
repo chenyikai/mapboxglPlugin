@@ -219,8 +219,8 @@ mapbox.on('loaded', (map) => {
     plugins: [AisShip]
   })
 
-  // shipList
-  const list: Array<BaseShipOptions> = testShipData.map(item => {
+  // shipList testShipData
+  const list: Array<BaseShipOptions> = allData.map(item => {
     const [lat, lon] = item.location.split(',')
 
     return {
@@ -249,9 +249,10 @@ mapbox.on('loaded', (map) => {
 
   ship.load(list)
 
-  // map.on('zoomend', () => {
-  //   ship.load(list)
-  // })
+  map.on('zoomend', () => {
+    ship.load(list)
+    // ship.removeAll()
+  })
 
 
   // ship.load(list).forEach(item => {

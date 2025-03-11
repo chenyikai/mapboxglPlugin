@@ -32,6 +32,10 @@ class Collision {
     return this._collisionList.find(item => item.id === id)
   }
 
+  clear(): void {
+    this._tree.clear()
+  }
+
   getCollisions() {
     return this._collisionList
   }
@@ -58,9 +62,6 @@ class Collision {
       }
     }
 
-
-    console.log('true', this.getCollisions().filter(item => item.visible).length);
-    console.log('false', this.getCollisions().filter(item => !item.visible).length);
     return this.getCollisions();
   }
 }
