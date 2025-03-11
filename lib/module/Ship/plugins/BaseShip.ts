@@ -17,6 +17,7 @@ abstract class BaseShip extends EventEmitter {
   _map: Map;
   _options: BaseShipOptions;
   tooltip: Tooltip | null = null;
+  visible: boolean = true;
 
   protected constructor(map: Map, options: BaseShipOptions) {
     super();

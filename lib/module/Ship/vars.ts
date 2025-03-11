@@ -13,6 +13,7 @@ export const SHIP_REAL_CONNECT_LINE_LAYER_NAME = 'mapbox-gl-ship-connect-line-la
 export const SHIP_ICON_LAYER: LayerSpecification = {
   id: SHIP_ICON_LAYER_NAME,
   source: SHIP_SOURCE_NAME,
+  filter: ['==', '$type', "Point"],
   type: 'symbol',
   layout: {
     "icon-allow-overlap": true,

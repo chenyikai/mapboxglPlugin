@@ -10,7 +10,7 @@ import {
   Tooltip
   // Label
 } from '../index'
-import { aimData, shipData, shipList, allData } from "./shipData";
+import { errorData, aimData, shipData, shipList, allData, testShipData, errorData } from "./shipData";
 import { Map, LngLat } from "mapbox-gl";
 // @ts-ignore
 import '../styles/index.scss'
@@ -218,7 +218,9 @@ mapbox.on('loaded', (map) => {
   const ship = new Ship(map, {
     plugins: [AisShip]
   })
-  const list: Array<BaseShipOptions> = [aimData].map(item => {
+
+  // shipList
+  const list: Array<BaseShipOptions> = testShipData.map(item => {
     const [lat, lon] = item.location.split(',')
 
     return {
@@ -240,11 +242,18 @@ mapbox.on('loaded', (map) => {
       bottom: item.toStern,
       right: item.toStarboard,
       left: item.toPort,
+      tooltip: true,
       icon: "ais"
     }
   })
 
   ship.load(list)
+
+  // map.on('zoomend', () => {
+  //   ship.load(list)
+  // })
+
+
   // ship.load(list).forEach(item => {
   //   const box = item.tooltip?.getBbox()
   //   if (box) {

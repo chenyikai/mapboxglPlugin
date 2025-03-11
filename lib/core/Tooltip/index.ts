@@ -4,7 +4,7 @@ import { BBox } from 'rbush'
 import { addLayer, addSource } from "lib/utils/util.ts";
 import { CONNECT_LINE_LAYER, TOOLTIP_SOURCE_NAME } from "lib/core/Tooltip/vars.ts";
 import { lineString } from "@turf/turf";
-import { Feature, GeoJSON, GeoJsonProperties, LineString } from "geojson";
+import { Feature, GeoJSON, LineString } from "geojson";
 
 class Tooltip {
 
@@ -40,8 +40,23 @@ class Tooltip {
     this._create()
   }
 
+  hide() {
+    this.visible = false
+    this.render()
+    this._map.off('zoom', this.zoomFunc)
+  }
+
+  show() {
+    this.visible = true
+    this.render()
+    this._map.on('zoom', this.zoomFunc)
+  }
+
   setAnchor(anchor: TooltipOptions['anchor']) {
-    this.remove()
+    this.mark && this.mark.remove()
+    this.mark = null
+    this._map.off('zoom', this.zoomFunc)
+
     this._options.anchor = anchor
     this._create()
 
@@ -126,9 +141,10 @@ class Tooltip {
   remove() {
     this.mark && this.mark.remove()
     this.mark = null
+    this.visible = false
 
     this._map.off('zoom', this.zoomFunc)
-    this._map.getSource<GeoJSONSource>(TOOLTIP_SOURCE_NAME)?.updateData(<GeoJSON>this.connectLine())
+    this.connectLine()
   }
 
   _create() {
@@ -139,7 +155,10 @@ class Tooltip {
       anchor: this._options.anchor
     }).setLngLat(this._options.position)
 
-    this._map.on('zoom', this.zoomFunc)
+    if (this.visible) {
+      this.render()
+      this._map.on('zoom', this.zoomFunc)
+    }
   }
 
   _getOffsetByAnchor() {
@@ -183,30 +202,27 @@ class Tooltip {
     return this
   }
 
-  connectLine(): Feature<null, GeoJsonProperties> | Feature<LineString, GeoJsonProperties> {
+  connectLine(): void {
     const id = `${this._options.id}-tooltip-connect-line`
     const lonLat = this.connectPoint() ? [
       this._options.position.toArray(),
       this.connectPoint()!.toArray()
     ] : null
 
-    if (lonLat === null) {
-      const emptyFeature: Feature<null> = {
-        id,
-        type: 'Feature',
-        geometry: null,
-        properties: {}
-      }
-      return emptyFeature
-    } else {
-      return lineString(lonLat, {}, {
-        id
-      })
-    }
+    const feature: Feature<null> | Feature<LineString> = lonLat === null ? {
+      id,
+      type: 'Feature',
+      geometry: null,
+      properties: {}
+    } : lineString(lonLat, {}, {
+      id
+    })
+
+    this._map.getSource<GeoJSONSource>(TOOLTIP_SOURCE_NAME)?.updateData(<GeoJSON>feature)
   }
 
   connectPoint() {
-    if (!this.mark) return null
+    if (!this.mark || !this.visible) return null
 
     const point = this._map.project(this.mark.getLngLat())
     const offset = this.mark.getOffset()
@@ -228,16 +244,23 @@ class Tooltip {
   }
 
   render() {
-    this.mark && this.mark.addTo(this._map)
+    if (!this.mark) {
+      console.warn('尚未初始化');
+      return null
+    }
 
-    this._map.getSource<GeoJSONSource>(TOOLTIP_SOURCE_NAME)?.updateData(<GeoJSON>this.connectLine())
+    if (this.visible) {
+      this.mark.addTo(this._map)
+    } else {
+      this.mark.remove()
+    }
+
+    this.connectLine()
     return this
   }
 
   _zoom() {
-    if (this.visible) {
-      this._map.getSource<GeoJSONSource>(TOOLTIP_SOURCE_NAME)?.updateData(<GeoJSON>this.connectLine())
-    }
+    this.connectLine()
   }
 }
 

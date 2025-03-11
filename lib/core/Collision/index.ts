@@ -15,7 +15,7 @@ class Collision {
 
   constructor(map: Map, config?: CollisionOptions) {
     this._map = map;
-    if (Array.isArray(config?.collisions)) {
+    if (Array.isArray(config?.collisions) && config?.collisions.length > 0) {
       this.load(config.collisions);
     }
   }
@@ -37,8 +37,6 @@ class Collision {
   }
 
   collides() {
-    if (!this._map) return;
-
     // const dpr: number = window.devicePixelRatio || 1
     // const canvas_bbox: BBox = {
     //   minX: 0,
@@ -51,16 +49,18 @@ class Collision {
         item.setDir(dir)
 
         const isCollides = this._tree.collides(item)
-        if (isCollides) {
-          item.setVisible(false)
-        } else {
+        item.setVisible(!isCollides)
+
+        if (item.visible) {
           this._tree.insert(item)
-          item.setVisible(true)
           break;
         }
       }
     }
 
+
+    console.log('true', this.getCollisions().filter(item => item.visible).length);
+    console.log('false', this.getCollisions().filter(item => !item.visible).length);
     return this.getCollisions();
   }
 }

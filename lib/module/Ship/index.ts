@@ -37,15 +37,21 @@ class Ship extends EventEmitter {
   }
 
   collisionTooltip() {
-    this._collision.load(this._createCollisions())?.forEach((collision) => {
+    this._collision.load(this._createCollisions()).forEach((collision) => {
+      const tooltip = this.tooltips.find(tooltip => tooltip.id === collision.id)
+      if (!tooltip) return
+
       if (collision.visible) {
-        const tooltip = this.tooltips.find(tooltip => tooltip.id === collision.id)
-        const ship = this.ships.find(ship => ship.getId() === collision.id)
-        if (ship && tooltip) {
-          tooltip.setAnchor(collision.dir)
-          ship.setTooltip(tooltip)
-          // ship.render()
-        }
+        tooltip.setAnchor(collision.dir)
+
+        // const ship = this.ships.find(ship => ship.getId() === collision.id)
+        // ship && tooltip.setAnchor(collision.dir)
+        // if (ship) {
+        // ship.setTooltip(tooltip)
+        // ship.render()
+        // }
+      } else {
+        tooltip?.hide()
       }
     })
   }
@@ -53,14 +59,14 @@ class Ship extends EventEmitter {
   add(ship: BaseShipOptions) {
     const Plugin = this._plugins.find(item => ship.type === item.NAME)
     if (!Plugin) {
-      console.warn(`${ship.type} can't be defined`);
+      console.warn(`${ship.type}插件匹配不到，请在初始化时通过plugins参数注入或者使用install方法安装。`);
       return;
     }
     const plugin: BaseShip = new Plugin(this._map, ship)
     const tooltip = new Tooltip(this._map, {
       id: plugin.getId(),
-      visible: true,
-      className: 'mapbox-gl-ship-name-tooltip',
+      visible: ship.tooltip,
+      className: `mapbox-gl-ship-name-tooltip`,
       position: plugin.getPosition(),
       offsetX: 5,
       offsetY: 25,
@@ -68,9 +74,9 @@ class Ship extends EventEmitter {
       anchor: 'bottom-right'
     })
 
-    tooltip.render()
     this.tooltips.push(tooltip)
-    // plugin.setTooltip(tooltip)
+    plugin.setTooltip(tooltip)
+
     // plugin.render()
     // plugin.events().on(['zoom', 'click', 'mouseenter', 'mouseleave'])
 
@@ -78,16 +84,14 @@ class Ship extends EventEmitter {
   }
 
   load(ships: Array<BaseShipOptions>) {
-    this.ships = []
+    // TODO 清除船舶和tooltip
+    this.removeAll()
 
     ships.forEach(ship => this.add(ship))
 
-    // this.collisionTooltip()
-
+    this.collisionTooltip()
     this.render()
-    this._map.on('zoom', () => {
-      this.render()
-    })
+
     return this.ships
   }
 
@@ -96,6 +100,8 @@ class Ship extends EventEmitter {
   removeAll() {
     this.ships.forEach(ship => ship.remove())
     this.ships = []
+    this.tooltips.forEach((tooltip) => tooltip.remove())
+    this.tooltips = []
   }
 
   install(plugin: any) {
@@ -136,6 +142,7 @@ class Ship extends EventEmitter {
       }
       return ship.getFeature()
     }).flat()
+
     this._map.getSource<GeoJSONSource>(SHIP_SOURCE_NAME)?.setData({
       type: 'FeatureCollection',
       features: features,
